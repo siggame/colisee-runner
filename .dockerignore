@@ -1,0 +1,17 @@
+# Editors & Environment
+.vagrant/
+.vscode/
+.idea/
+.env
+
+# NodeJS & NPM
+npm-debug.log
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+*.log
+
+tmp/

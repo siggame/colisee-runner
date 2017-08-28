@@ -1,0 +1,20 @@
+# Editors & Environment
+.idea/
+.vscode/
+.vagrant/
+.env
+
+# Compiled & Generated
+dist/
+
+test/*.js
+test/**/*.js
+
+# NPM
+node_modules/
+bower_components/
+npm-debug.log
+
+*.log
+
+tmp/
