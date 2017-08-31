@@ -25,6 +25,7 @@
     "@types/http-errors": "^1.6.0",
     "@types/knex": "0.0.60",
     "@types/lodash": "^4.14.74",
+    "@types/node": "^8.0.26",
     "@types/request": "^2.0.3",
     "@types/request-promise": "^4.1.37",
     "typescript": "^2.4.2"
