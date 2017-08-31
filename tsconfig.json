@@ -3,7 +3,12 @@
         "target": "es6",
         "module": "commonjs",
         "strict": true,
-        "outDir": "dist"
+        "outDir": "dist",
+        "rootDir": ".",
+        "lib": [
+            "es6",
+            "esnext.asynciterable"
+        ]
     },
     "include": [
         "src/",

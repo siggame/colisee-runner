@@ -3,12 +3,10 @@
 .vscode/
 .vagrant/
 .env
+tslint.json
 
 # Compiled & Generated
 dist/
-
-test/*.js
-test/**/*.js
 
 # NPM
 node_modules/
