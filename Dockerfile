@@ -1,3 +1,5 @@
+# See http://training.play-with-docker.com/node-zeit-pkg/
+
 FROM node:slim
 
 RUN npm install -g pkg pkg-fetch

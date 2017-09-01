@@ -14,7 +14,7 @@ services:
         aliases:
           - runner
   db:
-    image: colisee-db:development
+    image: siggame/colisee-db:latest
     ports:
       - 5432:5432
     networks:
