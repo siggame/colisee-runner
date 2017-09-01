@@ -47,7 +47,7 @@ export async function updateSubmissions({ submissions }: IGame) {
 }
 
 export async function getScheduledGame(): Promise<IGame | undefined> {
-    const queued_games = query("games").select("id").where({ status: "scheduled" }).orderBy("created_time").limit(1);
+    const queued_games = query("games").select("id").where({ status: "scheduled" }).orderBy("created_at").limit(1);
     return query.transaction(async (trx): Promise<any> => {
         const [game_info] = await query("games")
             .transacting(trx)
