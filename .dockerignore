@@ -3,15 +3,25 @@
 .vscode/
 .idea/
 .env
+tslint.json
 
 # NodeJS & NPM
 npm-debug.log
+node_modules/
 
 # Git
 .git/
 .gitignore
 .gitattributes
 
+# Docker
+docker-compose.yml
+Dockerfile
+
 *.log
 
+README.md
+TODO.md
+
+dist/
 tmp/
