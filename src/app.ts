@@ -1,4 +1,3 @@
-import "core-js/modules/es7.symbol.async-iterator";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -6,9 +5,10 @@ import * as cors from "cors";
 import * as express from "express";
 import * as httpErrors from "http-errors";
 import * as _ from "lodash";
-import * as request from "request";
+
+import { delay, retryRequest } from "./helpers";
 import { Runner } from "./runner";
-import { GAME_SERVER_API_PORT, GAME_SERVER_URL, RETRY_ATTEMPTS, TIMEOUT } from "./vars";
+import { GAME_NAME, GAME_SERVER_API_PORT, GAME_SERVER_GAME_PORT, GAME_SERVER_HOSTNAME, RETRY_ATTEMPTS, RUNNER_QUEUE_LIMIT, TIMEOUT } from "./vars";
 
 // TODO: refactor to use websocket?
 
@@ -16,55 +16,36 @@ const app = express();
 
 app.use(cors());
 
-interface IRetryOptions { url: string; attempts: number; timeout: number; }
+async function build_runner(): Promise<Runner> {
+    // test docker sock and db connections
 
-function retryRequest(
-    { url, attempts, timeout }: IRetryOptions,
-    resolve: () => void,
-    reject: (error?: Error) => void)
-    : void {
-    request.get(url, (error, response, body) => {
-        // console.log(body);
-        if (attempts === 0) {
-            reject(new Error(`Max attempts reached for request to ${url}`));
-        } else if (error || response.statusCode !== 200) {
-            setTimeout(retryRequest, timeout, { url, attempts: attempts - 1, timeout }, resolve, reject);
-        } else {
-            resolve();
-        }
+    await retryRequest({
+        attempts: RETRY_ATTEMPTS,
+        timeout: TIMEOUT,
+        url: `http://${GAME_SERVER_HOSTNAME}:${GAME_SERVER_API_PORT}`,
+    }).catch((error) => { console.log(error); process.exit(1); });
+
+    return new Runner({
+        docker_options: { },
+        game_server_options: {
+            api_port: GAME_SERVER_API_PORT,
+            game_name: GAME_NAME,
+            game_port: GAME_SERVER_GAME_PORT,
+            hostname: GAME_SERVER_HOSTNAME,
+        },
+        queue_limit: RUNNER_QUEUE_LIMIT,
     });
 }
 
-// TODO: refactor to be nicer
+let runner: Runner;
 
-async function* build_runner() {
-    await new Promise((res, rej) =>
-        retryRequest({
-            attempts: RETRY_ATTEMPTS,
-            timeout: TIMEOUT,
-            url: `${GAME_SERVER_URL}:${GAME_SERVER_API_PORT}`,
-        }, res, rej),
-    ).catch((error) => { console.error(error); process.exit(1); });
-
-    const r = new Runner();
-
-    yield r;
-
-    for await (const $ of r.run()) {
-        // this is p dope
-    }
-}
-
-const step = build_runner();
-const runner = step.next();
-
-app.get("/status", async (req, res) => {
-    const { value: { game } } = await runner;
-    res.json(game);
+app.get("/status", (req, res) => {
+    res.json(runner.games);
     res.end();
 });
 
-app.listen(8080, () => {
-    step.next();
+app.listen(8080, async () => {
+    runner = await build_runner();
+    runner.run().catch(console.error);
     console.log("Listening on port 8080...");
 });
