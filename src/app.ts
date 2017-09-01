@@ -8,9 +8,7 @@ import * as _ from "lodash";
 
 import { delay, retryRequest } from "./helpers";
 import { Runner } from "./runner";
-import { GAME_NAME, GAME_SERVER_API_PORT, GAME_SERVER_GAME_PORT, GAME_SERVER_HOSTNAME, RETRY_ATTEMPTS, RUNNER_QUEUE_LIMIT, TIMEOUT } from "./vars";
-
-// TODO: refactor to use websocket?
+import * as vars from "./vars";
 
 const app = express();
 
@@ -20,20 +18,23 @@ async function build_runner(): Promise<Runner> {
     // test docker sock and db connections
 
     await retryRequest({
-        attempts: RETRY_ATTEMPTS,
-        timeout: TIMEOUT,
-        url: `http://${GAME_SERVER_HOSTNAME}:${GAME_SERVER_API_PORT}`,
+        attempts: vars.RETRY_ATTEMPTS,
+        timeout: vars.TIMEOUT,
+        url: `http://${vars.GAME_SERVER_HOSTNAME}:${vars.GAME_SERVER_API_PORT}`,
     }).catch((error) => { console.log(error); process.exit(1); });
 
     return new Runner({
-        docker_options: { },
+        docker_options: {
+            host: vars.DOCKER_REGISTRY_HOST,
+            port: vars.DOCKER_REGISTRY_PORT,
+         },
         game_server_options: {
-            api_port: GAME_SERVER_API_PORT,
-            game_name: GAME_NAME,
-            game_port: GAME_SERVER_GAME_PORT,
-            hostname: GAME_SERVER_HOSTNAME,
+            api_port: vars.GAME_SERVER_API_PORT,
+            game_name: vars.GAME_NAME,
+            game_port: vars.GAME_SERVER_GAME_PORT,
+            hostname: vars.GAME_SERVER_HOSTNAME,
         },
-        queue_limit: RUNNER_QUEUE_LIMIT,
+        queue_limit: vars.RUNNER_QUEUE_LIMIT,
     });
 }
 
