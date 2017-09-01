@@ -12,7 +12,7 @@ export const DOCKER_REGISTRY_HOST: string = _.defaultTo<string>(process.env.DOCK
 export const DOCKER_REGISTRY_PORT: number = _.defaultTo<number>(_.toNumber(process.env.DOCKER_REGISTRY_PORT), 80);
 
 export const GAME_NAME: string = _.defaultTo<string>(process.env.GAME_NAME, "Chess");
-export const GAME_SERVER_HOSTNAME: string = _.defaultTo<string>(process.env.GAME_SERVER_HOSTNAME, "http://localhost");
+export const GAME_SERVER_HOST: string = _.defaultTo<string>(process.env.GAME_SERVER_HOST, "localhost");
 export const GAME_SERVER_GAME_PORT: number = _.defaultTo<number>(_.toNumber(process.env.GAME_SERVER_GAME_PORT), 3000);
 export const GAME_SERVER_API_PORT: number = _.defaultTo<number>(_.toNumber(process.env.GAME_SERVER_API_PORT), 3080);
 

@@ -20,7 +20,7 @@ async function build_runner(): Promise<Runner> {
     await retryRequest({
         attempts: vars.RETRY_ATTEMPTS,
         timeout: vars.TIMEOUT,
-        url: `http://${vars.GAME_SERVER_HOSTNAME}:${vars.GAME_SERVER_API_PORT}`,
+        url: `http://${vars.GAME_SERVER_HOST}:${vars.GAME_SERVER_API_PORT}`,
     }).catch((error) => { console.log(error); process.exit(1); });
 
     return new Runner({
@@ -32,7 +32,7 @@ async function build_runner(): Promise<Runner> {
             api_port: vars.GAME_SERVER_API_PORT,
             game_name: vars.GAME_NAME,
             game_port: vars.GAME_SERVER_GAME_PORT,
-            hostname: vars.GAME_SERVER_HOSTNAME,
+            hostname: vars.GAME_SERVER_HOST,
         },
         queue_limit: vars.RUNNER_QUEUE_LIMIT,
     });
