@@ -41,13 +41,13 @@ export async function updateSubmissions({ submissions }: IGame) {
         Promise.all(
             submissions.map(
                 ({ id, output_url }: IGameSubmission) =>
-                    query("game_submissions").transacting(trx).update({ output_url }, "*").where({ id })),
+                    query("games_submissions").transacting(trx).update({ output_url }, "*").where({ id })),
         ),
     ).catch((e) => { throw e; });
 }
 
-export async function getScheduledGame(): Promise<IGame | undefined> {
-    const queued_games = query("games").select("id").where({ status: "scheduled" }).orderBy("created_at").limit(1);
+export async function getQueuedGame(): Promise<IGame | undefined> {
+    const queued_games = query("games").select("id").where({ status: "queued" }).orderBy("created_at").limit(1);
     return query.transaction(async (trx): Promise<any> => {
         const [game_info] = await query("games")
             .transacting(trx)
@@ -67,11 +67,11 @@ export async function getScheduledGame(): Promise<IGame | undefined> {
 }
 
 async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promise<IGameSubmission[]> {
-    const subs = await query("game_submissions")
+    const subs = await query("games_submissions")
         .transacting(trx)
         .where({ game_id })
-        .join("submissions", "game_submissions.submission_id", "submissions.id")
-        .select("game_submissions.id as id", "submissions.image_name as image",
+        .join("submissions", "games_submissions.submission_id", "submissions.id")
+        .select("games_submissions.id as id", "submissions.image_name as image",
         "submissions.version as version", "submissions.team_id as team")
         .orderBy("team");
     const teams: ITeam[] = await query("teams")

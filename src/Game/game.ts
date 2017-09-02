@@ -29,9 +29,12 @@ export interface IGame {
     end_time?: number;
 }
 
+/*
+ * Generator that produces games.
+ */
 export async function* gen_game_queue(puller: IterableIterator<void>): AsyncIterableIterator<IGame> {
     while (true) {
-        const game = await db.getScheduledGame();
+        const game = await db.getQueuedGame();
         if (game) {
             puller.next();
             yield game;
@@ -41,13 +44,20 @@ export async function* gen_game_queue(puller: IterableIterator<void>): AsyncIter
     }
 }
 
+/**
+ * Generator used to recieve notifications that a new game is
+ * available in the queue.
+ */
 export function* gen_game_puller(): IterableIterator<void> {
     while (true) { yield; }
 }
 
+/*
+ * Generator that takes a queue and upon seeing new games, plays the game.
+ */
 export async function* play_games(game_queue: AsyncIterableIterator<IGame>, play: (game: IGame) => Promise<IGame>)
-: AsyncIterableIterator<IGame> {
-    for await(const game of game_queue) {
+    : AsyncIterableIterator<IGame> {
+    for await (const game of game_queue) {
         yield play(game).catch(async (e) => {
             console.error(e);
             await db.updateFailedGame(game);
@@ -57,7 +67,7 @@ export async function* play_games(game_queue: AsyncIterableIterator<IGame>, play
     }
 }
 
-export function prepare_clients(docker: Docker, options: Docker.DockerOptions, {submissions}: IGame) {
+export function prepare_clients(docker: Docker, options: Docker.DockerOptions, { submissions }: IGame) {
     return Promise.all(
         submissions.map(({ image, version }) =>
             docker.pull(`${image}:${version}`, options),
@@ -65,13 +75,13 @@ export function prepare_clients(docker: Docker, options: Docker.DockerOptions, {
     ).catch((error) => { throw error; });
 }
 
-export function run_clients(docker: Docker, {hostname, game_port}: IGameServerOptions, {submissions, id}: IGame) {
+export function run_clients(docker: Docker, { hostname, game_port }: IGameServerOptions, { submissions, id }: IGame) {
     return Promise.all(
         submissions.map(({ image, version, team: { name } }) => {
             // TODO: file stream or stream to remote log needs to be made
             return docker.run(`${image}:${version}`,
-                              ["-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${id}`],
-                              process.stdout);
+                ["-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${id}`],
+                process.stdout, {});
         }),
     ).catch((error) => { throw error; });
 }
