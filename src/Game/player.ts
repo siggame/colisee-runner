@@ -69,11 +69,15 @@ function run_game_clients(
     { submissions, id }: IGame,
 ) {
     return Promise.all(
-        submissions.map(async ({ image, version, team: { name } }) =>
+        submissions.map(async ({ image, version, team: { name } }) => {
             // TODO: file stream or stream to remote log needs to be made
-            await docker.run(`${image}:${version}`,
+            const container = await docker.run(`${image}:${version}`,
                 ["-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${id}`],
-                process.stdout, { HostConfig: { NetworkMode: network_name } }),
-        ),
+                process.stdout, { HostConfig: { NetworkMode: network_name } });
+            const data = await container.remove();
+            if (data) {
+                console.log("Client Data", data);
+            }
+        }),
     ).catch((e) => { console.log("Run Failed", e); throw e; });
 }
