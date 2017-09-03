@@ -15,40 +15,43 @@ export const query = knex({
 });
 
 export async function updateFailedGame({ id }: IGame) {
-    return query.transaction(async (trx) =>
-        query("games")
+    return query.transaction(async (trx) => {
+        await trx.raw("set transaction isolation level serializable;").then(_.noop);
+        await query("games")
             .transacting(trx)
             .update({ status: "failed" })
             .where({ id })
-            .thenReturn(),
-    ).catch((e) => { console.log("Update Failure\n", e); throw e; });
+            .thenReturn();
+    }).catch((e) => { console.log("Update Failure\n", e); throw e; });
 }
 
 export async function updateEndedGame({ id, log_url, lose_reason, winner, win_reason }: IGame) {
     if (winner === undefined) { throw TypeError("Winner is undefined."); }
     const { team: { id: winner_id } } = winner;
-    return query.transaction(async (trx) =>
-        query("games")
+    return query.transaction(async (trx) => {
+        await trx.raw("set transaction isolation level serializable;").then(_.noop);
+        await query("games")
             .transacting(trx)
             .update({ log_url, lose_reason, status: "finished", winner_id, win_reason })
             .where({ id })
-            .thenReturn(),
-    ).catch((e) => { console.log("Update Failure\n", e); throw e; });
+            .thenReturn();
+    }).catch((e) => { console.log("Update Failure\n", e); throw e; });
 }
 
 export async function updateSubmissions({ submissions }: IGame) {
-    return query.transaction(async (trx) =>
-        Promise.all(
-            submissions.map(
-                ({ id, output_url }: IGameSubmission) =>
-                    query("games_submissions").transacting(trx).update({ output_url }, "*").where({ id })),
-        ),
-    ).catch((e) => { throw e; });
+    return query.transaction(async (trx) => {
+        await trx.raw("set transaction isolation level serializable;").then(_.noop);
+        await Promise.all(
+            submissions.map(({ id, output_url }: IGameSubmission) =>
+                query("games_submissions").transacting(trx).update({ output_url }, "*").where({ id })),
+        );
+    }).catch((e) => { throw e; });
 }
 
 export async function getQueuedGame(): Promise<IGame | undefined> {
     const queued_games = query("games").select("id").where({ status: "queued" }).orderBy("created_at").limit(1);
     return query.transaction(async (trx): Promise<any> => {
+        await trx.raw("set transaction isolation level serializable;").then(_.noop);
         const [game_info] = await query("games")
             .transacting(trx)
             .update({ status: "playing" }, "*")
