@@ -1,11 +1,5 @@
 # colisee-runner
 
-## Requirements
-
-Node v8.4.0
-Docker 17.06 (optional)
-docker-compose
-
 ## Configuring Runner
 
 ### Deployments
