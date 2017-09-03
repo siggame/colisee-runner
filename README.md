@@ -25,7 +25,7 @@ then execute the `docker-compose.yml` updater
 
 ```bash
 $ # NOTE: this requires the utility envsubst
-$ bash -c "./update-docker-compose.sh"
+$ ./update-docker-compose.sh
 ```
 
 then simply run `docker-compose up --build`.
