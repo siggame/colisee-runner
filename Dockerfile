@@ -25,4 +25,4 @@ RUN apk update && apk add --no-cache libstdc++ libgcc
 
 COPY --from=build /app/runner /app/runner
 
-CMD ["/app/app"]
+CMD ["/app/runner"]
