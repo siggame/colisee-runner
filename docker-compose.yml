@@ -6,7 +6,7 @@ services:
     image: siggame/colisee-runner
     env_file: ./.env
     ports:
-      - 8080:8080
+      - 8080
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
