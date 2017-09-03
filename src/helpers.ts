@@ -95,9 +95,42 @@ export function coroutine<T, U>(
 
 export async function send<T, U>(
     iter: AsyncIterableIterator<T>,
-    consumer: AsyncIterableIterator<U>,
+    sink: AsyncIterableIterator<U>,
 ): Promise<void> {
     for await (const value of iter) {
-        consumer.next(value);
+        try {
+            sink.next(value);
+        } catch (e) {
+            throw e;
+        }
     }
+}
+
+export async function broadcast<T>(
+    iter: AsyncIterableIterator<T>,
+    ...sinks: Array<AsyncIterableIterator<any>>,
+) {
+    for await (const value of iter) {
+        try {
+            sinks.forEach(async (sink) => sink.next(value));
+        } catch (e) {
+            throw e;
+        }
+    }
+}
+
+export function consumer<T, U>(fn: (...args: any[]) => any) {
+    const consume = coroutine<any, U>(async function*(): AsyncIterableIterator<U> {
+        while (true) {
+            const incoming_args: T | undefined = await (yield);
+            try {
+                if (not_nil<T>(incoming_args)) {
+                    await fn(incoming_args);
+                }
+            } catch (e) {
+                throw e;
+            }
+        }
+    })();
+    return consume;
 }
