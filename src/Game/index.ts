@@ -1,1 +1,3 @@
-export {gen_game_puller, gen_game_queue, IGame, IGameSubmission, ITeam, play_games, prepare_clients, run_clients} from "./game";
+export { IGame, IGameSubmission, ITeam } from "./game";
+export { make_play_game, game_failed } from "./player";
+export { get_game_stream } from "./stream";

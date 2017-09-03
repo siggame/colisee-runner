@@ -21,7 +21,7 @@ export async function updateFailedGame({ id }: IGame) {
             .update({ status: "failed" })
             .where({ id })
             .thenReturn(),
-    ).catch((e) => { throw e; });
+    ).catch((e) => { console.log("Update Failure\n", e); throw e; });
 }
 
 export async function updateEndedGame({ id, log_url, lose_reason, winner, win_reason }: IGame) {
@@ -33,7 +33,7 @@ export async function updateEndedGame({ id, log_url, lose_reason, winner, win_re
             .update({ log_url, lose_reason, status: "finished", winner_id, win_reason })
             .where({ id })
             .thenReturn(),
-    ).catch((e) => { throw e; });
+    ).catch((e) => { console.log("Update Failure\n", e); throw e; });
 }
 
 export async function updateSubmissions({ submissions }: IGame) {

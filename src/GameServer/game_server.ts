@@ -17,10 +17,11 @@ export interface IGameServerError {
 }
 
 export interface IGameServerOptions {
-    hostname: string;
     api_port: number;
     game_port: number;
     game_name: string;
+    hostname: string;
+    network_name: string;
 }
 
 export interface IGameServerStatus {
@@ -32,10 +33,10 @@ export interface IGameServerStatus {
     clients: IGameServerClient[];
 }
 
-export async function get_game_info({hostname, api_port, game_name}: IGameServerOptions, session_id: number) {
+export async function get_game_info({ hostname, api_port, game_name }: IGameServerOptions, session_id: number) {
     return request.get(`http://${hostname}:${api_port}/status/${game_name}/${session_id}`)
         .then((body): IGameServerStatus => {
-            const {gamelogFilename, ...rest}: IGameServerStatus = JSON.parse(body);
+            const { gamelogFilename, ...rest }: IGameServerStatus = JSON.parse(body);
             return {
                 gamelogFilename: `${hostname}:${api_port}/gamelog/${gamelogFilename}`,
                 ...rest,

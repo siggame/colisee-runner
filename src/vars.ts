@@ -8,8 +8,8 @@ export const POSTGRES_DB: string = _.defaultTo<string>(process.env.POSTGRES_DB, 
 
 export const RUNNER_QUEUE_LIMIT: number = _.defaultTo<number>(_.toNumber(process.env.RUNNER_QUEUE_LIMIT), 3);
 
-export const DOCKER_REGISTRY_HOST: string = _.defaultTo<string>(process.env.DOCKER_REGISTRY_HOST, "http://docker.io");
-export const DOCKER_REGISTRY_PORT: number = _.defaultTo<number>(_.toNumber(process.env.DOCKER_REGISTRY_PORT), 80);
+export const DOCKER_REGISTRY_HOST: string = _.defaultTo<string>(process.env.DOCKER_REGISTRY_HOST, "");
+export const DOCKER_REGISTRY_PORT: number = _.defaultTo<number>(_.toNumber(process.env.DOCKER_REGISTRY_PORT), -1);
 
 export const GAME_NAME: string = _.defaultTo<string>(process.env.GAME_NAME, "Chess");
 export const GAME_SERVER_HOST: string = _.defaultTo<string>(process.env.GAME_SERVER_HOST, "localhost");

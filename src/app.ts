@@ -2,11 +2,14 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import * as cors from "cors";
+import * as Docker from "dockerode";
 import * as express from "express";
 import * as httpErrors from "http-errors";
 import * as _ from "lodash";
+import * as request from "request-promise-native";
 
-import { delay, retryRequest } from "./helpers";
+import * as db from "./db";
+import { delay, identity, retry } from "./helpers";
 import { Runner } from "./runner";
 import * as vars from "./vars";
 
@@ -15,24 +18,51 @@ const app = express();
 app.use(cors());
 
 async function build_runner(): Promise<Runner> {
-    // test docker sock and db connections
+    // verify docker is available
+    const docker = new Docker();
+    const containers = await docker.listContainers()
+        .then(identity<Docker.ContainerInfo[]>())
+        .catch((e) => { throw e; });
 
-    await retryRequest({
-        attempts: vars.RETRY_ATTEMPTS,
-        timeout: vars.TIMEOUT,
-        url: `http://${vars.GAME_SERVER_HOST}:${vars.GAME_SERVER_API_PORT}`,
-    }).catch((error) => { console.log(error); process.exit(1); });
+    const c_runner = containers.find(
+        ({ Labels: { "com.docker.compose.service": name } }) => name === "runner",
+    );
+    let network_name = "default";
+    if (c_runner) {
+        network_name = c_runner.HostConfig.NetworkMode;
+    }
 
-    return new Runner({
-        docker_options: {
+    // verify db is available
+    await retry(
+        { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
+        async () =>
+            db.query("teams").select("id").limit(1).then(identity()),
+    ).catch((e) => { throw e; });
+
+    // verify game server is available
+    await retry(
+        { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
+        () => request.get(`http://${vars.GAME_SERVER_HOST}:${vars.GAME_SERVER_API_PORT}`),
+    ).catch((e) => { throw e; });
+
+    let docker_options: Docker.DockerOptions = {};
+
+    if (vars.DOCKER_REGISTRY_HOST !== "") {
+        docker_options = {
             host: vars.DOCKER_REGISTRY_HOST,
             port: vars.DOCKER_REGISTRY_PORT,
-         },
+            protocol: "http",
+        };
+    }
+
+    return new Runner({
+        docker_options,
         game_server_options: {
             api_port: vars.GAME_SERVER_API_PORT,
             game_name: vars.GAME_NAME,
             game_port: vars.GAME_SERVER_GAME_PORT,
             hostname: vars.GAME_SERVER_HOST,
+            network_name,
         },
         queue_limit: vars.RUNNER_QUEUE_LIMIT,
     });
@@ -46,7 +76,11 @@ app.get("/status", (req, res) => {
 });
 
 app.listen(8080, async () => {
-    runner = await build_runner();
-    runner.run().catch(console.error);
+    runner = await build_runner()
+        .catch((e): any => {
+            console.log("Building Runner Failed\n", e);
+            process.exit(1);
+        });
+    runner.run().catch((e) => { console.log(e); });
     console.log("Listening on port 8080...");
 });
