@@ -75,7 +75,7 @@ app.get("/status", (req, res) => {
     res.end();
 });
 
-app.listen(8080, async () => {
+app.listen(vars.PORT, async () => {
     runner = await build_runner()
         .catch((e): any => {
             console.log("Building Runner Failed\n", e);

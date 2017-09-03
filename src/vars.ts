@@ -18,3 +18,5 @@ export const GAME_SERVER_API_PORT: number = _.defaultTo<number>(_.toNumber(proce
 
 export const RETRY_ATTEMPTS: number = _.defaultTo<number>(_.toNumber(process.env.RETRY_ATTEMPTS), 5);
 export const TIMEOUT: number = _.defaultTo<number>(_.toNumber(process.env.TIMEOUT), 5000);
+
+export const PORT: number = _.defaultTo<number>(_.toNumber(process.env.PORT), 8080);
