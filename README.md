@@ -1,9 +1,10 @@
 # colisee-runner
 
-## Requirements 
+## Requirements
 
 Node v8.4.0
 Docker 17.06 (optional)
+docker-compose
 
 ## Configuring Runner
 
@@ -17,6 +18,14 @@ Add a `.env` to the root of this project with the following contents:
 GAME_NAME=<Saloon|Stumped|...>
 GAME_SERVER_HOST=game_server
 POSTGRES_HOST=db
+PORT=8080
+```
+
+then execute the `docker-compose.yml` updater
+
+```bash
+$ # NOTE: this requires the utility envsubst
+$ bash -c "./update-docker-compose.sh"
 ```
 
 then simply run `docker-compose up --build`.
@@ -28,6 +37,11 @@ the runner relies on docker to run clients and the clients
 will have problems communicating to services running on the host
 directly (for windows and macos users).
 
+**NOTE**: The `PORT` number will be the port available in the container network.
+To access the `/status` endpoint it will be necessary to determine the random port
+exposed to the host that the runner has been assigned. This is useful so that
+there aren't conflicts when scaling up runners.
+
 ### Environment Variables
 
 A `.env` file is the preferred method for setting these variables. Simply add a new line for each variable override.
@@ -37,6 +51,7 @@ A `.env` file is the preferred method for setting these variables. Simply add a 
 * `RUNNER_QUEUE_LIMIT`: size limit on runner queue
 * `RETRY_ATTEMPTS`: attempts to be made to connect to services
 * `TIMEOUT`: timeout between attempts
+* `PORT`: port number to host the `/status` endpoint
 
 #### Database Settings
 
