@@ -1,0 +1,10 @@
+sudo: required
+
+services:
+  - docker
+
+before_script:
+  - docker build -t runner .
+
+script:
+  - docker run --rm runner | grep -q "Building Runner Failed"
