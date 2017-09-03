@@ -1,22 +1,28 @@
 # See http://training.play-with-docker.com/node-zeit-pkg/
 
-FROM node:slim
+FROM node:latest AS build
 
 RUN npm install -g pkg pkg-fetch
-
-ENV NODE latest
-ENV PLATFORM linux
+ENV NODE node8
+ENV PLATFORM alpine
 ENV ARCH x64
-
 RUN /usr/local/bin/pkg-fetch ${NODE} ${PLATFORM} ${ARCH}
 
-COPY . /app
 WORKDIR /app
-RUN npm install --silent && npm run build
-RUN /usr/local/bin/pkg --target ${NODE}-${PLATFORM}-${ARCH} -o /app/runner ./dist/src/app.js
 
-FROM debian:buster-slim
+COPY package.json .
+COPY package-lock.json .
+RUN npm install
+COPY . /app
+RUN npm run build && pkg -t ${NODE}-${PLATFORM}-${ARCH} --output runner dist/src/app.js
 
-COPY --from=0 /app/runner /
+FROM alpine:latest
 
-CMD ["/bin/bash", "-c", "/runner"]
+WORKDIR /app
+ENV NODE_ENV=production
+
+RUN apk update && apk add --no-cache libstdc++ libgcc
+
+COPY --from=build /app/runner /app/runner
+
+CMD ["/app/app"]

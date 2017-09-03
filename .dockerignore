@@ -15,7 +15,7 @@ node_modules/
 .gitattributes
 
 # Docker
-docker-compose.yml
+docker-compose.*
 Dockerfile
 
 *.log
@@ -25,3 +25,4 @@ TODO.md
 
 dist/
 tmp/
+update-docker-compose.sh
