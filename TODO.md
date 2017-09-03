@@ -1,6 +1,18 @@
-## Check if services are up
+## Add remote logging capabilities
 
-* Game Server
-* DB
-* Docker (check if socket is mounted)
+* Write client logs to external source
 
+## Add support for siggame tsconfig
+
+* refer to `siggame/colisee-lib`
+
+## Add more documentation of queue
+
+* Explain the pipeline
+* Refactor out 'streams'?
+
+## Housekeeping
+
+* Add more in code documentation
+
+## Add tests
