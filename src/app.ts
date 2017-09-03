@@ -82,5 +82,5 @@ app.listen(vars.PORT, async () => {
             process.exit(1);
         });
     runner.run().catch((e) => { console.log(e); });
-    console.log("Listening on port 8080...");
+    console.log(`Listening on port ${vars.PORT}...`);
 });
