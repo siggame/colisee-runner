@@ -72,6 +72,18 @@ export async function* async_foreach<T>(
     }
 }
 
+export async function* foreach<T>(
+    iter: AsyncIterableIterator<T>,
+    async_callback: (value: T) => Promise<T>,
+    error: (error: any, value: T) => Promise<any>,
+): AsyncIterableIterator<T> {
+    for await (const value of iter) {
+        await async_callback(value)
+            .catch((e) => error(e, value));
+        yield value;
+    }
+}
+
 export async function* filter<T, U extends T>(
     iter: AsyncIterableIterator<T>,
     condition: (value: T) => value is U,
