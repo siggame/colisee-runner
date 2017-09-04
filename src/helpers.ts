@@ -8,10 +8,8 @@ export async function retry(
     fn: (...args: any[]) => Promise<any>,
     ...args: any[]) {
     for (let i = 0; i < attempts; i++) {
-        const { response, error }: { response?: any, error?: any } = await fn(...args)
-            .then((res) => ({ response: res }))
-            .catch((e) => ({ error: e }));
-        if (response) {
+        const success = await fn(...args).then(() => true).catch(() => false);
+        if (success) {
             return;
         } else {
             await delay(timeout);
