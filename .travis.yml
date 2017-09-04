@@ -12,4 +12,4 @@ before_script:
   - docker build -t runner .
 
 script:
-  - docker run --rm runner | grep -q "Building Runner Failed"
+  - docker run --rm runner 2>&1 | grep -q "Building Runner Failed"
