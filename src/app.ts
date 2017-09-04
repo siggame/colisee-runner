@@ -4,7 +4,6 @@ dotenv.config();
 import * as cors from "cors";
 import * as Docker from "dockerode";
 import * as express from "express";
-import * as httpErrors from "http-errors";
 import * as _ from "lodash";
 import * as request from "request-promise-native";
 import * as winston from "winston";
