@@ -7,6 +7,7 @@ import * as express from "express";
 import * as httpErrors from "http-errors";
 import * as _ from "lodash";
 import * as request from "request-promise-native";
+import * as winston from "winston";
 
 import * as db from "./db";
 import { delay, identity, retry } from "./helpers";
@@ -16,6 +17,12 @@ import * as vars from "./vars";
 const app = express();
 
 app.use(cors());
+
+winston.configure({
+    transports: [
+        new (winston.transports.Console)(),
+    ],
+});
 
 async function build_runner(): Promise<Runner> {
     // verify docker is available
@@ -78,9 +85,9 @@ app.get("/status", (req, res) => {
 app.listen(vars.PORT, async () => {
     runner = await build_runner()
         .catch((e): any => {
-            console.log("Building Runner Failed\n", e);
+            winston.error("Building Runner Failed\n", e);
             process.exit(1);
         });
-    runner.run().catch((e) => { console.log(e); });
-    console.log(`Listening on port ${vars.PORT}...`);
+    runner.run().catch((e) => { winston.error(e); });
+    winston.info(`Listening on port ${vars.PORT}...`);
 });

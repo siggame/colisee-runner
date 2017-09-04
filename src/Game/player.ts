@@ -1,5 +1,6 @@
 import * as Docker from "dockerode";
 import * as _ from "lodash";
+import * as winston from "winston";
 
 import * as db from "../db";
 import { get_game_info, IGameServerOptions } from "../GameServer";
@@ -45,7 +46,7 @@ export function make_play_game(
 }
 
 export async function game_failed(error: any, game: IGame) {
-    console.log("Game Failure\n", game, "\n", error);
+    winston.error("Game Failure\n", game, "\n", error);
     await db.updateFailedGame(game);
     game.status = "complete";
     return game;
@@ -60,7 +61,7 @@ function prepare_game_clients(
         submissions.map(async ({ image, version }) =>
             await docker.pull(`${image}:${version}`, options),
         ),
-    ).catch((e) => { console.log("Pull Failed\n", e); throw e; });
+    ).catch((e) => { winston.error("Pull Failed\n", e); throw e; });
 }
 
 function run_game_clients(
@@ -76,8 +77,8 @@ function run_game_clients(
                 process.stdout, { HostConfig: { NetworkMode: network_name } });
             const data = await container.remove();
             if (data) {
-                console.log("Client Data", data);
+                winston.info("Client Data", data);
             }
         }),
-    ).catch((e) => { console.log("Run Failed", e); throw e; });
+    ).catch((e) => { winston.error("Run Failed", e); throw e; });
 }

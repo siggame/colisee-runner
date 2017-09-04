@@ -43,7 +43,7 @@ export async function* generate<T>(fn: (...args: any[]) => Promise<T>, ...args: 
 }
 
 export async function* take<T>(n: number, iter: AsyncIterableIterator<T>) {
-    while (n-- > 0) {
+    for(let i = 0; i < n; i++){
         yield await iter.next();
     }
     return;

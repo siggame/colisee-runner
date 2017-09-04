@@ -1,5 +1,6 @@
 import * as Docker from "dockerode";
 import * as _ from "lodash";
+import * as winston from "winston";
 
 import * as db from "./db";
 import { game_failed, get_game_stream, IGame, make_play_game } from "./Game";
@@ -34,7 +35,7 @@ export class Runner {
         const queued_games = this.enqueue_games(get_game_stream());
         const play_game = make_play_game(this.docker, this.docker_options, this.game_server_options);
         const played_games = async_foreach(queued_games, play_game, game_failed);
-        await send(played_games, consumer(({ id, status}: IGame) => console.log(id, status)));
+        send(played_games, consumer(({ id, status}: IGame) => winston.info(`${id} ${status}`)));
     }
 
     private async *enqueue_games(game_queue: AsyncIterableIterator<IGame>) {
