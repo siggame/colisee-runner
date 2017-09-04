@@ -45,7 +45,7 @@ export class Runner {
                 this.games.push(new_game);
                 yield new_game;
             } else {
-                this.games = this.games.filter(({ status }) => status !== "complete");
+                this.games = this.games.filter(({ status }) => status === "playing");
                 await delay(10);
             }
         }

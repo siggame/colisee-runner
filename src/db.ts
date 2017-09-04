@@ -37,7 +37,7 @@ async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promi
 
 export async function getQueuedGame(): Promise<IGame | undefined> {
     const queued_games = query("games").select("id").where({ status: "queued" }).orderBy("created_at").limit(1).forUpdate();
-    return query.transaction(async (trx): Promise<any> => {
+    return query.transaction(async (trx): Promise<IGame> => {
         const [game_info] = await query("games")
             .transacting(trx)
             .update({ status: "playing" }, "*")
@@ -49,7 +49,7 @@ export async function getQueuedGame(): Promise<IGame | undefined> {
         return {
             id: game_info.id,
             start_time: Date.now(),
-            status: "starting",
+            status: "playing",
             submissions,
         };
     }).catch((e) => undefined);

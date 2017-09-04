@@ -1,6 +1,6 @@
 import { not_nil } from "../helpers";
 
-type GameStatus = "starting" | "in_progress" | "ending" | "complete";
+type GameStatus = "queued" | "playing" | "finished" | "failed";
 
 export interface ITeam { id: number; name: string; }
 

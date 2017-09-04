@@ -15,12 +15,11 @@ export function make_play_game(
         // pull client images
         await prepare_game_clients(docker, docker_options, game);
 
-        game.status = "in_progress";
+        game.status = "playing";
 
         // run client containers
         await run_game_clients(docker, game_server_options, game);
 
-        game.status = "ending";
         game.end_time = Date.now();
         // TODO: get and set location of output
         game.submissions.forEach((sub) => {
@@ -39,7 +38,7 @@ export function make_play_game(
 
         await db.updateEndedGame(game);
 
-        game.status = "complete";
+        game.status = "finished";
 
         return game;
     };
@@ -47,8 +46,8 @@ export function make_play_game(
 
 export async function game_failed(error: any, game: IGame) {
     winston.error("Game Failure\n", game, "\n", error);
+    game.status = "failed";
     await db.updateFailedGame(game);
-    game.status = "complete";
     return game;
 }
 
@@ -77,8 +76,8 @@ function run_game_clients(
                 process.stdout, { HostConfig: { NetworkMode: network_name } });
             const data = await container.remove();
             if (data) {
-                winston.info("Client Data", data);
+                winston.info("Client Data\n", data);
             }
         }),
-    ).catch((e) => { winston.error("Run Failed", e); throw e; });
+    ).catch((e) => { winston.error("Run Failed\n", e); throw e; });
 }
