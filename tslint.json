@@ -1,0 +1,8 @@
+{
+    "extends": "@siggame/colisee-tslint/tslint.json",
+    "rules": {
+        "no-trailing-whitespace": [
+            true
+        ]
+    }
+}
