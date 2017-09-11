@@ -41,7 +41,7 @@ export async function* generate<T>(fn: (...args: any[]) => Promise<T>, ...args: 
 }
 
 export async function* take<T>(n: number, iter: AsyncIterableIterator<T>) {
-    for(let i = 0; i < n; i++){
+    for (let i = 0; i < n; i++) {
         yield await iter.next();
     }
     return;
@@ -94,9 +94,9 @@ export async function* filter<T, U extends T>(
 }
 
 export function coroutine<T, U>(
-    genFn: (...args: T[]) => AsyncIterableIterator<U>,
+    genFn: (...args: Array<any | T>) => AsyncIterableIterator<U>,
 ) {
-    return (...args: T[]): AsyncIterableIterator<U> => {
+    return (...args: Array<any | T>): AsyncIterableIterator<U> => {
         const generator = genFn(...args);
         generator.next();
         return generator;
@@ -120,6 +120,7 @@ export async function broadcast<T>(
     iter: AsyncIterableIterator<T>,
     ...sinks: Array<AsyncIterableIterator<any>>,
 ) {
+    if (sinks.length < 1) { throw new TypeError("At least one sink is necessary"); }
     for await (const value of iter) {
         try {
             sinks.forEach(async (sink) => sink.next(value));
@@ -129,13 +130,13 @@ export async function broadcast<T>(
     }
 }
 
-export function consumer<T, U>(fn: (...args: any[]) => any) {
-    const consume = coroutine<any, U>(async function*(): AsyncIterableIterator<U> {
+export function consumer<T, U>(fn: (...args: Array<any | T>) => any) {
+    const consume = coroutine<any | T, U>(async function* (): AsyncIterableIterator<U> {
         while (true) {
-            const incoming_args: T | undefined = await (yield);
+            const [...args]: Array<any | T> = await (yield);
             try {
-                if (not_nil<T>(incoming_args)) {
-                    await fn(incoming_args);
+                if (not_nil<Array<any | T>>(args)) {
+                    await fn(...args);
                 }
             } catch (e) {
                 throw e;
