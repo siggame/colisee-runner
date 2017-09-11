@@ -3,14 +3,13 @@
 .vscode/
 .vagrant/
 .env
-tslint.json
 
 # Compiled & Generated
-dist/
+release/
 
 # NPM
-node_modules/
 bower_components/
+node_modules/
 npm-debug.log
 
 *.log

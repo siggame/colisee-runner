@@ -23,6 +23,6 @@ Dockerfile
 README.md
 TODO.md
 
-dist/
+release/
 tmp/
 update-docker-compose.sh

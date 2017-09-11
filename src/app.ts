@@ -81,7 +81,7 @@ app.get("/status", (req, res) => {
     res.end();
 });
 
-app.listen(vars.PORT, async () => {
+async function listener() {
     runner = await build_runner()
         .catch((e): any => {
             winston.error("Building Runner Failed\n", e);
@@ -89,4 +89,6 @@ app.listen(vars.PORT, async () => {
         });
     runner.run().catch((e) => { winston.error(e); });
     winston.info(`Listening on port ${vars.PORT}...`);
-});
+}
+
+export { app, listener };
