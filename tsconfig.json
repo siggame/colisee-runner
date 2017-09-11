@@ -11,8 +11,5 @@
     "include": [
         "src/",
         "test/"
-    ],
-    "files": [
-        "index.ts"
     ]
 }

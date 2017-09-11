@@ -37,7 +37,7 @@
     "build:watch": "tsc --watch",
     "lint": "tslint --format verbose --project ./tsconfig.json",
     "setup": "npm install",
-    "start-dev": "npm run build && node dist/src/app.js",
+    "start-dev": "npm run build && node src/index.js",
     "start-prod": "NODE_ENV=production npm run build:dist && node release/index.js",
     "test": "npm run build && mocha dist/test/unit dist/test/integration",
     "clean": "npm run clean:src && npm run clean:test && npm run clean:misc",

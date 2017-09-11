@@ -4,7 +4,6 @@
         "module": "commonjs",
         "strict": true,
         "outDir": "release",
-        "rootDir": ".",
         "lib": [
             "es6",
             "esnext.asynciterable"
@@ -12,8 +11,5 @@
     },
     "include": [
         "src/"
-    ],
-    "files": [
-        "index.ts"
     ]
 }
