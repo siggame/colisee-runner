@@ -2,10 +2,6 @@
 
 * Write client logs to external source
 
-## Add support for siggame tsconfig
-
-* refer to `siggame/colisee-lib`
-
 ## Add more documentation of queue
 
 * Explain the pipeline
