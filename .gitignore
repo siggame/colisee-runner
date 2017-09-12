@@ -5,13 +5,13 @@
 .env
 
 # Compiled & Generated
-release/
+*.js
 
 # NPM
-bower_components/
 node_modules/
-npm-debug.log
 
 *.log
 
+docs/
+release/
 tmp/
