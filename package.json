@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@siggame/colisee-tslint": "^1.0.3",
+    "@types/chai": "^4.0.4",
     "@types/core-js": "^0.9.43",
     "@types/cors": "^2.8.1",
     "@types/dockerode": "^2.4.6",
@@ -28,6 +29,7 @@
     "@types/request": "^2.0.3",
     "@types/request-promise-native": "^1.0.6",
     "@types/winston": "^2.3.5",
+    "chai": "^4.1.2",
     "mocha": "^3.5.3",
     "rimraf": "^2.6.1",
     "typescript": "^2.5.2"
