@@ -1,4 +1,7 @@
-import { app, listener } from "./app";
-import { PORT } from "./vars";
+import { app, default as runner } from "./app";
 
-app.listen(PORT, listener);
+if (!module.parent) {
+    runner();
+}
+
+export { app };

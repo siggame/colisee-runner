@@ -81,14 +81,16 @@ app.get("/status", (req, res) => {
     res.end();
 });
 
-async function listener() {
-    runner = await build_runner()
-        .catch((e): any => {
-            winston.error("Building Runner Failed\n", e);
-            process.exit(1);
-        });
-    runner.run().catch((e) => { winston.error(e); });
-    winston.info(`Listening on port ${vars.PORT}...`);
-}
+export default () => {
+    app.listen(vars.PORT, async () => {
+        runner = await build_runner()
+            .catch((e): any => {
+                winston.error("Building Runner Failed\n", e);
+                process.exit(1);
+            });
+        runner.run().catch((e) => { winston.error(e); });
+        winston.info(`Listening on port ${vars.PORT}...`);
+    });
+};
 
-export { app, listener };
+export { app };

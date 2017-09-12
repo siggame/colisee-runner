@@ -1,15 +1,8 @@
-addons:
-  apt:
-    packages:
-      - docker-ce
-
-sudo: required
-
-services:
-  - docker
+language: node_js
+node_js:
+    - node
 
 before_script:
-  - docker build -t runner .
-
+    - npm install
 script:
-  - docker run --rm runner 2>&1 | grep -q "Building Runner Failed"
+    - npm test
