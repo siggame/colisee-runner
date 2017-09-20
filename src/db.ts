@@ -1,33 +1,21 @@
+import { db } from "@siggame/colisee-lib";
 import * as knex from "knex";
-import * as _ from "lodash";
 import * as winston from "winston";
 
 import { IGame, IGameSubmission, ITeam } from "./Game";
-import { POSTGRES_DB, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER } from "./vars";
-
-export const query = knex({
-    client: "pg",
-    connection: {
-        database: POSTGRES_DB,
-        host: POSTGRES_HOST,
-        password: POSTGRES_PASSWORD,
-        port: POSTGRES_PORT,
-        user: POSTGRES_USER,
-    },
-});
 
 async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promise<IGameSubmission[]> {
-    const subs = await query("games_submissions")
+    const subs = await db.connection("games_submissions")
         .transacting(trx)
         .where({ game_id })
         .join("submissions", "games_submissions.submission_id", "submissions.id")
         .select("games_submissions.id as id", "submissions.image_name as image",
         "submissions.version as version", "submissions.team_id as team")
         .orderBy("team");
-    const teams: ITeam[] = await query("teams")
+    const teams: ITeam[] = await db.connection("teams")
         .transacting(trx)
         .select("id", "name")
-        .where("id", "IN", subs.map((sub: any) => sub.team))
+        .whereIn("id", subs.map((sub: any) => sub.team))
         .orderBy("id");
     return subs.map((sub: any, i: number): IGameSubmission => {
         sub.team = teams[i];
@@ -35,18 +23,27 @@ async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promi
     });
 }
 
+/**
+ * Attempts to take a game out of the queue by changing the status from
+ * "queued" to "playing" and ensuring that at least two game submissions
+ * are available for the game. If the transaction fails, then undefined is returned.
+ *
+ * @export
+ * @returns {(Promise<IGame | undefined>)}
+ */
 export async function getQueuedGame(): Promise<IGame | undefined> {
-    const queued_games = query("games").select("id").where({ status: "queued" }).orderBy("created_at").limit(1).forUpdate();
-    return query.transaction(async (trx): Promise<IGame> => {
-        const [game_info] = await query("games")
+    const queuedGames = db.connection("games").select("id").where({ status: "queued" }).orderBy("created_at").limit(1).forUpdate();
+    return db.connection.transaction(async (trx): Promise<IGame> => {
+        const [gameInfo] = await db.connection("games")
             .transacting(trx)
             .update({ status: "playing" }, "*")
-            .whereIn("id", queued_games);
-        if (game_info === undefined) { throw new TypeError("game_info is undefined."); }
-        const submissions = await getGameSubmissions(trx, game_info.id);
+            .whereIn("id", queuedGames)
+            .then(db.rowsToGames);
+        if (gameInfo === undefined) { throw new TypeError("gameInfo is undefined."); }
+        const submissions = await getGameSubmissions(trx, gameInfo.id);
         if (submissions.length < 2) { throw new Error(`Not enough submissions. (${submissions.length})`); }
         return {
-            id: game_info.id,
+            id: gameInfo.id,
             start_time: Date.now(),
             status: "playing",
             submissions,
@@ -54,31 +51,73 @@ export async function getQueuedGame(): Promise<IGame | undefined> {
     }).catch((e) => undefined);
 }
 
-export async function updateEndedGame({ id, log_url, lose_reason, winner, win_reason }: IGame) {
+/**
+ * Update the fields of a finished game with the values in the game
+ * object.
+ *
+ * @export
+ * @param {IGame} { id, log_url, lose_reason, winner, win_reason }
+ * @returns {Promise<void>}
+ */
+export async function updateEndedGame({ id, log_url, lose_reason, winner, win_reason }: IGame): Promise<void> {
     if (winner === undefined) { throw TypeError("Winner is undefined."); }
     const { team: { id: winner_id } } = winner;
-    return query.transaction(async (trx) => {
-        await query("games")
+    return db.connection.transaction(async (trx) => {
+        await db.connection("games")
             .transacting(trx)
             .update({ log_url, lose_reason, status: "finished", winner_id, win_reason })
             .where({ id });
     }).catch((e) => { winston.error("Update Failure\n", e); throw e; });
 }
 
-export async function updateFailedGame({ id }: IGame) {
-    return query.transaction(async (trx) => {
-        await query("games")
+/**
+ * Update the status of a failed game.
+ *
+ * @export
+ * @param {IGame} { id }
+ * @returns {Promise<void>}
+ */
+export async function updateFailedGame({ id }: IGame): Promise<void> {
+    return db.connection.transaction(async (trx) => {
+        await db.connection("games")
             .transacting(trx)
             .update({ status: "failed" })
             .where({ id });
     }).catch((e) => { winston.error("Update Failure\n", e); throw e; });
 }
 
-export async function updateSubmissions({ submissions }: IGame) {
-    return query.transaction(async (trx) => {
+/**
+ * Updates the output for a game submission in a given game using
+ * the submissions in the game.
+ *
+ * @export
+ * @param {IGame} { submissions }
+ * @returns {Promise<void>}
+ */
+export async function updateSubmissions({ submissions }: IGame): Promise<void> {
+    return db.connection.transaction(async (trx) => {
         await Promise.all(
             submissions.map(({ id, output_url }: IGameSubmission) =>
-                query("games_submissions").transacting(trx).update({ output_url }, "*").where({ id })),
+                db.connection("games_submissions")
+                    .transacting(trx)
+                    .update({ output_url }, "*")
+                    .where({ id })
+                    .thenReturn(),
+            ),
         );
     }).catch((e) => { throw e; });
+}
+
+/**
+ * Attempts to connect to the database and perform a simple query.
+ *
+ * @export
+ * @returns {Promise<void>}
+ */
+export function pingDatabase(): Promise<void> {
+    return Promise.resolve(
+        db.connection("teams")
+            .select("id")
+            .limit(1)
+            .thenReturn());
 }
