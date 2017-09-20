@@ -40,7 +40,7 @@
     "build:watch": "tsc --watch",
     "lint": "tslint --format verbose --project ./tsconfig.json",
     "setup": "npm install",
-    "start:dev": "npm run build && node --inspect src",
+    "start:dev": "npm run build && node --trace-warnings --inspect src",
     "start:prod": "NODE_ENV=production npm run build:dist && node release",
     "pretest": "npm run build",
     "test": "mocha --colors test",
