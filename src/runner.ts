@@ -12,6 +12,13 @@ export interface IRunnerOptions {
     queue_limit: number;
 }
 
+/**
+ * The runner is responsible for ingesting games into a queue and
+ * running a match from the game description.
+ *
+ * @export
+ * @class Runner
+ */
 export class Runner {
 
     public games: IGame[];
@@ -20,6 +27,11 @@ export class Runner {
     private game_server_options: IGameServerOptions;
     private queue_limit: number;
 
+    /**
+     * Creates an instance of Runner.
+     * @param {IRunnerOptions} { docker_options, game_server_options, queue_limit = RUNNER_QUEUE_LIMIT }
+     * @memberof Runner
+     */
     constructor({ docker_options, game_server_options, queue_limit = RUNNER_QUEUE_LIMIT }: IRunnerOptions) {
         this.docker = new Docker();
         this.docker_options = docker_options;
@@ -28,6 +40,14 @@ export class Runner {
         this.queue_limit = queue_limit;
     }
 
+    /**
+     * Creates queue of games from the incoming stream of games. For
+     * each game in the queue, a match is played. Once the match has
+     * been initiated, the game id and status is logged.
+     *
+     * @returns {Promise<void>}
+     * @memberof Runner
+     */
     public async run(): Promise<void> {
         const queued_games = this.enqueue_games(get_game_stream());
         const play_game = make_play_game(this.docker, this.docker_options, this.game_server_options);
@@ -35,6 +55,14 @@ export class Runner {
         send(played_games, consumer<IGame, void>(({ id, status }: IGame): void => { winston.info(`Game ${id} is ${status}`); }));
     }
 
+    /**
+     * Creates a queue by rate limiting the number of games
+     * ingested from a stream of incoming games.
+     *
+     * @private
+     * @param {AsyncIterableIterator<IGame>} game_queue
+     * @memberof Runner
+     */
     private async *enqueue_games(game_queue: AsyncIterableIterator<IGame>) {
         while (true) {
             if (this.games.length < this.queue_limit) {
