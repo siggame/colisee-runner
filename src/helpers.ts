@@ -93,10 +93,10 @@ export async function* filter<T, U extends T>(
     }
 }
 
-export function coroutine<T, U>(
-    genFn: (...args: Array<any | T>) => AsyncIterableIterator<U>,
+export function coroutine<T, U, V extends IterableIterator<U> | AsyncIterableIterator<U>>(
+    genFn: (...args: Array<any | T>) => V,
 ) {
-    return (...args: Array<any | T>): AsyncIterableIterator<U> => {
+    return (...args: Array<any | T>): V => {
         const generator = genFn(...args);
         generator.next();
         return generator;
@@ -104,8 +104,8 @@ export function coroutine<T, U>(
 }
 
 export async function send<T, U>(
-    iter: AsyncIterableIterator<T>,
-    sink: AsyncIterableIterator<U>,
+    iter: IterableIterator<T> | AsyncIterableIterator<T>,
+    sink: IterableIterator<U> | AsyncIterableIterator<U>,
 ): Promise<void> {
     for await (const value of iter) {
         try {
@@ -130,14 +130,12 @@ export async function broadcast<T>(
     }
 }
 
-export function consumer<T, U>(fn: (...args: Array<any | T>) => any) {
-    const consume = coroutine<any | T, U>(async function* (): AsyncIterableIterator<U> {
+export function consumer<T, U>(fn: (...args: Array<T>) => any) {
+    const consume = coroutine<T, U, AsyncIterableIterator<U>>(async function* (): AsyncIterableIterator<U> {
         while (true) {
-            const [...args]: Array<any | T> = await (yield);
             try {
-                if (not_nil<Array<any | T>>(args)) {
-                    await fn(...args);
-                }
+                const [...args]: Array<T> = [await (yield)];
+                fn(...args);
             } catch (e) {
                 throw e;
             }
