@@ -57,9 +57,13 @@ function prepare_game_clients(
     { submissions }: IGame,
 ) {
     return Promise.all(
-        submissions.map(async ({ image, version }) =>
-            await docker.pull(`${image}:${version}`, options),
-        ),
+        submissions.map(async ({ image, version }) => {
+            const pullOutput: NodeJS.ReadableStream = await docker.pull(`${image}:${version}`, options);
+            pullOutput.pipe(process.stdout);
+            return new Promise((res, rej) => {
+                pullOutput.on("end", res);
+            });
+        }),
     ).catch((e) => { winston.error("Pull Failed\n", e); throw e; });
 }
 
