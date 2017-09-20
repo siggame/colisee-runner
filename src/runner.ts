@@ -1,8 +1,6 @@
 import * as Docker from "dockerode";
-import * as _ from "lodash";
 import * as winston from "winston";
 
-import * as db from "./db";
 import { game_failed, get_game_stream, IGame, make_play_game } from "./Game";
 import { IGameServerOptions } from "./GameServer";
 import { async_foreach, consumer, delay, send } from "./helpers";
@@ -19,8 +17,6 @@ export class Runner {
     public games: IGame[];
     private docker: Docker;
     private docker_options: Docker.DockerOptions;
-    private game_puller: IterableIterator<void>;
-    private game_queue: AsyncIterableIterator<IGame>;
     private game_server_options: IGameServerOptions;
     private queue_limit: number;
 
