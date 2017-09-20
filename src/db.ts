@@ -41,8 +41,7 @@ export async function getQueuedGame(): Promise<IGame | undefined> {
         const [game_info] = await query("games")
             .transacting(trx)
             .update({ status: "playing" }, "*")
-            .whereIn("id", queued_games)
-            .then((rows): any[] => rows);
+            .whereIn("id", queued_games);
         if (game_info === undefined) { throw new TypeError("game_info is undefined."); }
         const submissions = await getGameSubmissions(trx, game_info.id);
         if (submissions.length < 2) { throw new Error(`Not enough submissions. (${submissions.length})`); }
@@ -62,8 +61,7 @@ export async function updateEndedGame({ id, log_url, lose_reason, winner, win_re
         await query("games")
             .transacting(trx)
             .update({ log_url, lose_reason, status: "finished", winner_id, win_reason })
-            .where({ id })
-            .thenReturn();
+            .where({ id });
     }).catch((e) => { winston.error("Update Failure\n", e); throw e; });
 }
 
@@ -72,8 +70,7 @@ export async function updateFailedGame({ id }: IGame) {
         await query("games")
             .transacting(trx)
             .update({ status: "failed" })
-            .where({ id })
-            .thenReturn();
+            .where({ id });
     }).catch((e) => { winston.error("Update Failure\n", e); throw e; });
 }
 
