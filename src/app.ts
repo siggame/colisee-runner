@@ -4,12 +4,11 @@ dotenv.config();
 import * as cors from "cors";
 import * as Docker from "dockerode";
 import * as express from "express";
-import * as _ from "lodash";
 import * as request from "request-promise-native";
 import * as winston from "winston";
 
 import * as db from "./db";
-import { delay, identity, retry } from "./helpers";
+import { identity, retry } from "./helpers";
 import { Runner } from "./runner";
 import * as vars from "./vars";
 
@@ -41,8 +40,7 @@ async function build_runner(): Promise<Runner> {
     // verify db is available
     await retry(
         { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
-        async () =>
-            db.query("teams").select("id").limit(1).then(identity()),
+        async () => db.pingDatabase(),
     ).catch((e) => { throw e; });
 
     // verify game server is available
