@@ -32,7 +32,7 @@ export class Runner {
         const queued_games = this.enqueue_games(get_game_stream());
         const play_game = make_play_game(this.docker, this.docker_options, this.game_server_options);
         const played_games = async_foreach(queued_games, play_game, game_failed);
-        send(played_games, consumer(({ id, status }: IGame) => winston.info(`${id} ${status}`)));
+        send(played_games, consumer<IGame, void>(({ id, status }: IGame): void => { winston.info(`Game ${id} is ${status}`); }));
     }
 
     private async *enqueue_games(game_queue: AsyncIterableIterator<IGame>) {
