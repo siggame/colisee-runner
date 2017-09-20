@@ -8,6 +8,6 @@ import { IGame, is_game } from "./game";
  * Generator that produces games.
  */
 export function get_game_stream(): AsyncIterableIterator<IGame> {
-    const games = map(generate(delay, 100), (__: any) => db.getQueuedGame(), (e, value) => { throw e; });
+    const games = map(generate(delay, 100), (ignore: any) => db.getQueuedGame(), (e, value) => { throw e; });
     return filter(games, is_game);
 }
