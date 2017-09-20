@@ -1,6 +1,6 @@
 # siggame/colisee-runner
 
-A brief description of the project.
+The runner service is responsible for claiming and processing queued games.
 
 [![Travis](https://img.shields.io/travis/siggame/colisee-runner.svg?style=flat-square)](https://travis-ci.org/siggame/colisee-runner)
 [![Docker Pulls](https://img.shields.io/docker/pulls/siggame/colisee-runner.svg?style=flat-square)](https://hub.docker.com/r/siggame/colisee-runner/)
@@ -21,7 +21,12 @@ A brief description of the project.
 
 ## Description
 
-A long description of the project.
+The runner service is responsible for claiming and processing queued games. The workflow
+for a runner is to claim a queued game, if the runner's queue of playing games is not full,
+then play the game and add it to the queue of games being played. When a game is finished, the game
+will be removed from the playing queue. During this process the runner will update the status
+of a game and write the logs to storage for events like pulling the client image, running the client
+image, and any errors that may occur.
 
 ## Getting Started
 
@@ -34,7 +39,7 @@ docker pull siggame/colisee-runner
 Using npm.
 
 ```bash
-npm run setup && npm run start-prod
+npm run build
 ```
 
 ## Usage
@@ -74,6 +79,12 @@ directly (for windows and macos users).
 To access the `/status` endpoint it will be necessary to determine the random port
 exposed to the host that the runner has been assigned. This is useful so that
 there aren't conflicts when scaling up runners.
+
+#### API
+
+##### `GET /status`
+
+Returns the list of games currently in the runner's queue.
 
 #### Environment Variables
 
