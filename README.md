@@ -86,13 +86,13 @@ A `.env` file is the preferred method for setting these variables. Simply add a 
 - `TIMEOUT`: timeout between attempts
 - `PORT`: port number to host the `/status` endpoint
 
-##### Database Settings
+##### Database Settings `*`
 
-- `POSTGRES_HOST`: hostname for postgresql
-- `POSTGRES_PORT`: port for postgresql
-- `POSTGRES_USER`: user for postgresql
-- `POSTGRES_PASSWORD`: password for postgresql
-- `POSTGRES_DB`: db name for postgresql
+- `DB_HOST`: hostname for postgresql
+- `DB_PORT`: port for postgresql
+- `DB_USER`: user for postgresql
+- `DB_PASSWORD`: password for postgresql
+- `DB_DB`: db name for postgresql
 
 ##### Docker Registry Settings
 
@@ -107,6 +107,8 @@ A `.env` file is the preferred method for setting these variables. Simply add a 
 - `GAME_SERVER_API_PORT`: port for the game server api
 
 To see defaults for these values refer to `src/vars.ts`;
+
+`*` refer to [siggame/colisee-lib](https://github.com/siggame/colisee-lib)
 
 ## Contributors
 
