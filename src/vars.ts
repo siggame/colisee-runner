@@ -1,11 +1,5 @@
 import { defaultTo, toNumber } from "lodash";
 
-export const POSTGRES_HOST: string = defaultTo<string>(process.env.POSTGRES_HOST, "localhost");
-export const POSTGRES_PORT: number = defaultTo<number>(toNumber(process.env.POSTGRES_PORT), 5432);
-export const POSTGRES_USER: string = defaultTo<string>(process.env.POSTGRES_USER, "postgres");
-export const POSTGRES_PASSWORD: string = defaultTo<string>(process.env.POSTGRES_PASSWORD, "postgres");
-export const POSTGRES_DB: string = defaultTo<string>(process.env.POSTGRES_DB, "postgres");
-
 export const RUNNER_QUEUE_LIMIT: number = defaultTo<number>(toNumber(process.env.RUNNER_QUEUE_LIMIT), 3);
 
 export const DOCKER_REGISTRY_HOST: string = defaultTo<string>(process.env.DOCKER_REGISTRY_HOST, "");

@@ -1,10 +1,54 @@
-# colisee-runner
+# siggame/colisee-runner
 
-## Configuring Runner
+The runner service is responsible for claiming and processing queued games.
 
-### Deployments
+[![Travis](https://img.shields.io/travis/siggame/colisee-runner.svg?style=flat-square)](https://travis-ci.org/siggame/colisee-runner)
+[![Docker Pulls](https://img.shields.io/docker/pulls/siggame/colisee-runner.svg?style=flat-square)](https://hub.docker.com/r/siggame/colisee-runner/)
+[![GitHub Tag](https://img.shields.io/github/tag/siggame/colisee-runner.svg?style=flat-square)](https://github.com/siggame/colisee-runner/tags)
+[![Dependencies](https://img.shields.io/david/siggame/colisee-runner.svg)](https://github.com/siggame/colisee-runner)
+[![NPM Version](https://img.shields.io/npm/v/@siggame/colisee-runner.svg?style=flat-square)](https://www.npmjs.com/package/@siggame/colisee-runner)
+[![NPM Total Downloads](https://img.shields.io/npm/dt/@siggame/colisee-runner.svg?style=flat-square)](https://www.npmjs.com/package/@siggame/colisee-runner)
 
-#### Docker Compose (Recommended)
+## Table Of Contents
+
+- [Description](#description)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Contributors](#contributors)
+- [Change Log](#change-log)
+- [License](#license)
+- [Contributing](#contributing)
+
+## Description
+
+The runner service is responsible for claiming and processing queued games. The workflow
+for a runner is to claim a queued game, if the runner's queue of playing games is not full,
+then play the game and add it to the queue of games being played. When a game is finished, the game
+will be removed from the playing queue. During this process the runner will update the status
+of a game and write the logs to storage for events like pulling the client image, running the client
+image, and any errors that may occur.
+
+## Getting Started
+
+Using docker.
+
+```bash
+docker pull siggame/colisee-runner
+```
+
+Using npm.
+
+```bash
+npm run build
+```
+
+## Usage
+
+### Configuring Runner
+
+#### Deployments
+
+##### Docker Compose (Recommended)
 
 Add a `.env` to the root of this project with the following contents:
 
@@ -18,7 +62,7 @@ PORT=8080
 then execute the `docker-compose.yml` updater
 
 ```bash
-$ # NOTE: this requires the utility envsubst
+# NOTE: this requires the utility envsubst
 $ ./update-docker-compose.sh
 ```
 
@@ -36,35 +80,62 @@ To access the `/status` endpoint it will be necessary to determine the random po
 exposed to the host that the runner has been assigned. This is useful so that
 there aren't conflicts when scaling up runners.
 
-### Environment Variables
+#### API
+
+##### `GET /status`
+
+Returns the list of games currently in the runner's queue.
+
+#### Environment Variables
 
 A `.env` file is the preferred method for setting these variables. Simply add a new line for each variable override.
 
-#### Runner Settings
+##### Runner Settings
 
-* `RUNNER_QUEUE_LIMIT`: size limit on runner queue
-* `RETRY_ATTEMPTS`: attempts to be made to connect to services
-* `TIMEOUT`: timeout between attempts
-* `PORT`: port number to host the `/status` endpoint
+- `RUNNER_QUEUE_LIMIT`: size limit on runner queue
+- `RETRY_ATTEMPTS`: attempts to be made to connect to services
+- `TIMEOUT`: timeout between attempts
+- `PORT`: port number to host the `/status` endpoint
 
-#### Database Settings
+##### Database Settings `*`
 
-* `POSTGRES_HOST`: hostname for postgresql
-* `POSTGRES_PORT`: port for postgresql
-* `POSTGRES_USER`: user for postgresql
-* `POSTGRES_PASSWORD`: password for postgresql
-* `POSTGRES_DB`: db name for postgresql
+- `DB_HOST`: hostname for postgresql
+- `DB_PORT`: port for postgresql
+- `DB_USER`: user for postgresql
+- `DB_PASSWORD`: password for postgresql
+- `DB_DB`: db name for postgresql
 
-#### Docker Registry Settings
+##### Docker Registry Settings
 
-* `DOCKER_REGISTRY_HOST`: hostname of docker (private) registry
-* `DOCKER_REGISTRY_PORT`: port of docker (private) registry
+- `DOCKER_REGISTRY_HOST`: hostname of docker (private) registry
+- `DOCKER_REGISTRY_PORT`: port of docker (private) registry
 
-#### Game Server Settings
+##### Game Server Settings
 
-* `GAME_NAME`: name of the game being played
-* `GAME_SERVER_HOST`: hostname of the game server
-* `GAME_SERVER_GAME_PORT`: port for the game communication
-* `GAME_SERVER_API_PORT`: port for the game server api
+- `GAME_NAME`: name of the game being played
+- `GAME_SERVER_HOST`: hostname of the game server
+- `GAME_SERVER_GAME_PORT`: port for the game communication
+- `GAME_SERVER_API_PORT`: port for the game server api
 
 To see defaults for these values refer to `src/vars.ts`;
+
+`*` refer to [siggame/colisee-lib](https://github.com/siggame/colisee-lib)
+
+## Contributors
+
+- [Russley Shaw](https://github.com/russleyshaw)
+- [user404d](https://github.com/user404d)
+- [Hannah Reinbolt](https://github.com/LoneGalaxy)
+- [Matthew Qualls](https://github.com/MatthewQualls)
+
+## Change Log
+
+View our [CHANGELOG.md](https://github.com/siggame/colisee-runner/blob/master/CHANGELOG.md)
+
+## License
+
+View our [LICENSE.md](https://github.com/siggame/colisee/blob/master/LICENSE.md)
+
+## Contributing
+
+View our [CONTRIBUTING.md](https://github.com/siggame/colisee/blob/master/CONTRIBUTING.md)

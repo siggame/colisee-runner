@@ -6,8 +6,8 @@
 tslint.json
 
 # NodeJS & NPM
-npm-debug.log
 node_modules/
+*.js
 
 # Git
 .git/
@@ -15,14 +15,16 @@ node_modules/
 .gitattributes
 
 # Docker
+.dockerignore
 docker-compose.*
 Dockerfile
 
 *.log
 
+CHANGELOG.md
 README.md
 TODO.md
-
-dist/
+docs/
+release/
 tmp/
 update-docker-compose.sh

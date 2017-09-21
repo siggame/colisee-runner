@@ -24,6 +24,11 @@ export interface IGame {
     end_time?: number;
 }
 
+/**
+ * Asserts that value is an IGame and not null.
+ *
+ * @export
+ */
 export function is_game(value: IGame | undefined | null): value is IGame {
     return not_nil<IGame>(value);
 }

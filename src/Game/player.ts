@@ -6,6 +6,11 @@ import * as db from "../db";
 import { get_game_info, IGameServerOptions } from "../GameServer";
 import { IGame } from "./game";
 
+/**
+ * Creates an asynchronous function to play a game.
+ *
+ * @export
+ */
 export function make_play_game(
     docker: Docker,
     docker_options: Docker.DockerOptions,
@@ -57,9 +62,14 @@ function prepare_game_clients(
     { submissions }: IGame,
 ) {
     return Promise.all(
-        submissions.map(async ({ image, version }) =>
-            await docker.pull(`${image}:${version}`, options),
-        ),
+        submissions.map(async ({ image, version }) => {
+            const pullOutput: NodeJS.ReadableStream = await docker.pull(`${image}:${version}`, options);
+            // TODO: pipe to some storage
+            pullOutput.pipe(process.stdout);
+            return new Promise((res, rej) => {
+                pullOutput.on("end", res);
+            });
+        }),
     ).catch((e) => { winston.error("Pull Failed\n", e); throw e; });
 }
 
@@ -71,12 +81,13 @@ function run_game_clients(
     return Promise.all(
         submissions.map(async ({ image, version, team: { name } }) => {
             // TODO: file stream or stream to remote log needs to be made
-            const container = await docker.run(`${image}:${version}`,
+            // TODO: add cleanup after timeout is exceeded
+            const container: Docker.Container = await docker.run(`${image}:${version}`,
                 ["-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${id}`],
                 process.stdout, { HostConfig: { NetworkMode: network_name } });
-            const data = await container.remove();
+            const data = await container.remove({ id: container.id, force: true });
             if (data) {
-                winston.info("Client Data\n", data);
+                winston.info(`Client (${name}) Data:\n`, data);
             }
         }),
     ).catch((e) => { winston.error("Run Failed\n", e); throw e; });

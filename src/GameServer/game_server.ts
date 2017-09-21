@@ -33,8 +33,13 @@ export interface IGameServerStatus {
     clients: IGameServerClient[];
 }
 
-export async function get_game_info({ hostname, api_port, game_name }: IGameServerOptions, session_id: number) {
-    return request.get(`http://${hostname}:${api_port}/status/${game_name}/${session_id}`)
+/**
+ * Query the game server for information about the session with sessionId.
+ *
+ * @export
+ */
+export async function get_game_info({ hostname, api_port, game_name }: IGameServerOptions, sessionId: number): Promise<IGameServerStatus> {
+    return request.get(`http://${hostname}:${api_port}/status/${game_name}/${sessionId}`)
         .then((body): IGameServerStatus => {
             const { gamelogFilename, ...rest }: IGameServerStatus = JSON.parse(body);
             return {

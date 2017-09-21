@@ -3,10 +3,17 @@ import * as _ from "lodash";
 
 interface IRetryOptions { attempts: number; timeout: number; }
 
+/**
+ * Retry fn using attempts as the maximum number of attempts using
+ * timeout as the timeout between attempts. Throws an error when
+ * maximum attempts have been reached.
+ *
+ * @export
+ */
 export async function retry(
     { attempts, timeout }: IRetryOptions,
     fn: (...args: any[]) => Promise<any>,
-    ...args: any[]) {
+    ...args: any[]): Promise<void> {
     for (let i = 0; i < attempts; i++) {
         const success = await fn(...args).then(() => true).catch(() => false);
         if (success) {
@@ -18,35 +25,70 @@ export async function retry(
     throw new Error(`Max attempts reached for request. (${attempts})`);
 }
 
+/**
+ * Delay execution for ms milliseconds.
+ *
+ * @export
+ */
 export async function delay(ms: number) {
     await new Promise((res, rej) => setTimeout(res, ms));
 }
 
+/**
+ * Helper for type problems on callbacks.
+ *
+ * @export
+ */
 export function identity<T>(): (first: T) => T {
     return (first: T) => first;
 }
 
+/**
+ * Assert that value is not undefined or null.
+ *
+ * @export
+ */
 export function not_nil<T>(value: T | undefined | null): value is T {
     return !_.isNil(value);
 }
 
+/**
+ * Create an infinite stream.
+ *
+ * @export
+ */
 export async function* infinite<T>(): AsyncIterableIterator<T> {
     while (true) { yield; }
 }
 
-export async function* generate<T>(fn: (...args: any[]) => Promise<T>, ...args: any[]) {
+/**
+ * Create a stream of values that are the result of calling `fn` with `...args`.
+ *
+ * @export
+ */
+export async function* generate<T>(fn: (...args: any[]) => Promise<T>, ...args: any[]): AsyncIterableIterator<T> {
     while (true) {
         yield await fn(...args);
     }
 }
 
-export async function* take<T>(n: number, iter: AsyncIterableIterator<T>) {
+/**
+ * Take n values generated from iter.
+ *
+ * @export
+ */
+export async function* take<T>(n: number, iter: AsyncIterableIterator<T>): AsyncIterableIterator<T> {
     for (let i = 0; i < n; i++) {
-        yield await iter.next();
+        yield (await iter.next()).value;
     }
     return;
 }
 
+/**
+ * Transform a stream of T into a stream of U.
+ *
+ * @export
+ */
 export async function* map<T, U>(
     iter: AsyncIterableIterator<T>,
     async_callback: (value: T) => Promise<U>,
@@ -58,6 +100,12 @@ export async function* map<T, U>(
     }
 }
 
+/**
+ * Asynchronously call async_callback on values generated
+ * by iter and yield incoming values.
+ *
+ * @export
+ */
 export async function* async_foreach<T>(
     iter: AsyncIterableIterator<T>,
     async_callback: (value: T) => Promise<T>,
@@ -70,6 +118,12 @@ export async function* async_foreach<T>(
     }
 }
 
+/**
+ * Synchronously call async_callback on values generated
+ * by iter and yield incoming values.
+ *
+ * @export
+ */
 export async function* foreach<T>(
     iter: AsyncIterableIterator<T>,
     async_callback: (value: T) => Promise<T>,
@@ -82,6 +136,11 @@ export async function* foreach<T>(
     }
 }
 
+/**
+ * Filter out values that do not satisfy the condition.
+ *
+ * @export
+ */
 export async function* filter<T, U extends T>(
     iter: AsyncIterableIterator<T>,
     condition: (value: T) => value is U,
@@ -93,19 +152,30 @@ export async function* filter<T, U extends T>(
     }
 }
 
-export function coroutine<T, U>(
-    genFn: (...args: Array<any | T>) => AsyncIterableIterator<U>,
+/**
+ * Create and prepare consumer from given generator.
+ *
+ * @export
+ */
+export function coroutine<T, U, V extends IterableIterator<U> | AsyncIterableIterator<U>>(
+    genFn: (...args: Array<any | T>) => V,
 ) {
-    return (...args: Array<any | T>): AsyncIterableIterator<U> => {
+    return (...args: Array<any | T>): V => {
         const generator = genFn(...args);
         generator.next();
         return generator;
     };
 }
 
+/**
+ * Send the values generated from iter to sink so that the values
+ * are consumed.
+ *
+ * @export
+ */
 export async function send<T, U>(
-    iter: AsyncIterableIterator<T>,
-    sink: AsyncIterableIterator<U>,
+    iter: IterableIterator<T> | AsyncIterableIterator<T>,
+    sink: IterableIterator<U> | AsyncIterableIterator<U>,
 ): Promise<void> {
     for await (const value of iter) {
         try {
@@ -130,14 +200,17 @@ export async function broadcast<T>(
     }
 }
 
-export function consumer<T, U>(fn: (...args: Array<any | T>) => any) {
-    const consume = coroutine<any | T, U>(async function* (): AsyncIterableIterator<U> {
+/**
+ * Create a consumer using fn by calling fn on the incoming value.
+ *
+ * @export
+ */
+export function consumer<T, U>(fn: (...args: Array<T>) => any) {
+    const consume = coroutine<T, U, AsyncIterableIterator<U>>(async function* (): AsyncIterableIterator<U> {
         while (true) {
-            const [...args]: Array<any | T> = await (yield);
             try {
-                if (not_nil<Array<any | T>>(args)) {
-                    await fn(...args);
-                }
+                const [...args]: Array<T> = [await (yield)];
+                fn(...args);
             } catch (e) {
                 throw e;
             }

@@ -3,9 +3,13 @@
         "target": "es6",
         "module": "commonjs",
         "strict": true,
+        "outDir": "release",
         "lib": [
             "es6",
             "esnext.asynciterable"
         ]
-    }
+    },
+    "include": [
+        "src/"
+    ]
 }
