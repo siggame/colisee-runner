@@ -32,14 +32,12 @@
     "chai": "^4.1.2",
     "mocha": "^3.5.3",
     "rimraf": "^2.6.2",
-    "typedoc": "^0.8.0",
     "typescript": "^2.5.2"
   },
   "scripts": {
     "build": "tsc",
     "build:dist": "tsc -p tsconfig.dist.json",
     "build:watch": "tsc --watch",
-    "build:docs": "typedoc --tsconfig tsconfig.dist.json --mode modules --out docs --ignoreCompilerErrors",
     "lint": "tslint --format verbose --project ./tsconfig.json",
     "setup": "npm install",
     "start:dev": "npm run build && node --trace-warnings --inspect src",

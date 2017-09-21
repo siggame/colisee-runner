@@ -7,9 +7,5 @@
             "es6",
             "esnext.asynciterable"
         ]
-    },
-    "include": [
-        "src/",
-        "test/"
-    ]
+    }
 }

@@ -8,7 +8,8 @@ script:
     - npm test
 
 before_deploy:
-    - npm run build:docs
+    - npm install -g typedoc
+    - typedoc --tsconfig tsconfig.dist.json --mode modules --out docs
 
 deploy:
   provider: pages
