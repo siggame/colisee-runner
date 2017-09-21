@@ -9,8 +9,6 @@ import { IGame, is_game } from "./game";
  * is delayed by ms milliseconds.
  *
  * @export
- * @param {number} [ms=100] Delay in ms.
- * @returns {AsyncIterableIterator<IGame>} Stream of games.
  */
 export function get_game_stream(ms: number = 100): AsyncIterableIterator<IGame> {
     const games = map(generate(delay, ms), (ignore: any) => db.getQueuedGame(), (e, value) => { throw e; });

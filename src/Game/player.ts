@@ -10,10 +10,6 @@ import { IGame } from "./game";
  * Creates an asynchronous function to play a game.
  *
  * @export
- * @param {Docker} docker
- * @param {Docker.DockerOptions} docker_options
- * @param {IGameServerOptions} game_server_options
- * @returns {(game: IGame) => Promise<IGame>}
  */
 export function make_play_game(
     docker: Docker,

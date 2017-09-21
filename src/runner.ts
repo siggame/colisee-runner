@@ -17,7 +17,6 @@ export interface IRunnerOptions {
  * running a match from the game description.
  *
  * @export
- * @class Runner
  */
 export class Runner {
 
@@ -29,8 +28,6 @@ export class Runner {
 
     /**
      * Creates an instance of Runner.
-     * @param {IRunnerOptions} { docker_options, game_server_options, queue_limit = RUNNER_QUEUE_LIMIT }
-     * @memberof Runner
      */
     constructor({ docker_options, game_server_options, queue_limit = RUNNER_QUEUE_LIMIT }: IRunnerOptions) {
         this.docker = new Docker();
@@ -44,9 +41,6 @@ export class Runner {
      * Creates queue of games from the incoming stream of games. For
      * each game in the queue, a match is played. Once the match has
      * been initiated, the game id and status is logged.
-     *
-     * @returns {Promise<void>}
-     * @memberof Runner
      */
     public async run(): Promise<void> {
         const queued_games = this.enqueue_games(get_game_stream());
@@ -58,10 +52,6 @@ export class Runner {
     /**
      * Creates a queue by rate limiting the number of games
      * ingested from a stream of incoming games.
-     *
-     * @private
-     * @param {AsyncIterableIterator<IGame>} game_queue
-     * @memberof Runner
      */
     private async *enqueue_games(game_queue: AsyncIterableIterator<IGame>) {
         while (true) {

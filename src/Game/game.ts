@@ -28,8 +28,6 @@ export interface IGame {
  * Asserts that value is an IGame and not null.
  *
  * @export
- * @param {(IGame | undefined | null)} value
- * @returns {value is IGame}
  */
 export function is_game(value: IGame | undefined | null): value is IGame {
     return not_nil<IGame>(value);

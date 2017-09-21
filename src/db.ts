@@ -29,7 +29,6 @@ async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promi
  * are available for the game. If the transaction fails, then undefined is returned.
  *
  * @export
- * @returns {(Promise<IGame | undefined>)}
  */
 export async function getQueuedGame(): Promise<IGame | undefined> {
     const queuedGames = db.connection("games").select("id").where({ status: "queued" }).orderBy("created_at").limit(1).forUpdate();
@@ -56,8 +55,6 @@ export async function getQueuedGame(): Promise<IGame | undefined> {
  * object.
  *
  * @export
- * @param {IGame} { id, log_url, lose_reason, winner, win_reason }
- * @returns {Promise<void>}
  */
 export async function updateEndedGame({ id, log_url, lose_reason, winner, win_reason }: IGame): Promise<void> {
     if (winner === undefined) { throw TypeError("Winner is undefined."); }
@@ -74,8 +71,6 @@ export async function updateEndedGame({ id, log_url, lose_reason, winner, win_re
  * Update the status of a failed game.
  *
  * @export
- * @param {IGame} { id }
- * @returns {Promise<void>}
  */
 export async function updateFailedGame({ id }: IGame): Promise<void> {
     return db.connection.transaction(async (trx) => {
@@ -91,8 +86,6 @@ export async function updateFailedGame({ id }: IGame): Promise<void> {
  * the submissions in the game.
  *
  * @export
- * @param {IGame} { submissions }
- * @returns {Promise<void>}
  */
 export async function updateSubmissions({ submissions }: IGame): Promise<void> {
     return db.connection.transaction(async (trx) => {
@@ -112,7 +105,6 @@ export async function updateSubmissions({ submissions }: IGame): Promise<void> {
  * Attempts to connect to the database and perform a simple query.
  *
  * @export
- * @returns {Promise<void>}
  */
 export function pingDatabase(): Promise<void> {
     return Promise.resolve(
