@@ -1,5 +1,6 @@
 import "core-js/modules/es7.symbol.async-iterator";
 import * as _ from "lodash";
+import { RequestPromise } from "request-promise-native";
 
 interface IRetryOptions { attempts: number; timeout: number; }
 
@@ -12,7 +13,7 @@ interface IRetryOptions { attempts: number; timeout: number; }
  */
 export async function retry(
     { attempts, timeout }: IRetryOptions,
-    fn: (...args: any[]) => Promise<any>,
+    fn: (...args: any[]) => Promise<any> | RequestPromise,
     ...args: any[]): Promise<void> {
     for (let i = 0; i < attempts; i++) {
         const success = await fn(...args).then(() => true).catch(() => false);
