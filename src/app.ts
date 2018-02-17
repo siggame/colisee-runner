@@ -4,6 +4,7 @@ dotenv.config();
 import * as cors from "cors";
 import * as Docker from "dockerode";
 import * as express from "express";
+import * as fs from "fs";
 import * as request from "request-promise-native";
 import * as winston from "winston";
 
@@ -80,6 +81,9 @@ app.get("/status", (req, res) => {
 });
 
 export default () => {
+    if (!fs.existsSync(vars.OUTPUT_DIR)) {
+        fs.mkdirSync(vars.OUTPUT_DIR);
+    }
     app.listen(vars.PORT, async () => {
         runner = await build_runner()
             .catch((e): any => {

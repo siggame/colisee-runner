@@ -1,3 +1,4 @@
+import { PassThrough } from "stream";
 import { not_nil } from "../helpers";
 
 type GameStatus = "queued" | "playing" | "finished" | "failed";
@@ -10,6 +11,7 @@ export interface IGameSubmission {
     image: string;
     version: number;
     output_url?: string;
+    log?: PassThrough;
 }
 
 export interface IGame {
