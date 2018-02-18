@@ -43,7 +43,7 @@ export async function get_game_info({ hostname, api_port, game_name }: IGameServ
         .then((body): IGameServerStatus => {
             const { gamelogFilename, ...rest }: IGameServerStatus = JSON.parse(body);
             return {
-                gamelogFilename: `${hostname}:${api_port}/gamelog/${gamelogFilename}`,
+                gamelogFilename: `/gamelog/${gamelogFilename}.json.gz`,
                 ...rest,
             };
         }).catch((e) => { throw e; });
