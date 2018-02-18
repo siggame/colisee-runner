@@ -1,5 +1,6 @@
 import "core-js/modules/es7.symbol.async-iterator";
 import * as _ from "lodash";
+import { Socket } from "net";
 import { RequestPromise } from "request-promise-native";
 
 interface IRetryOptions { attempts: number; timeout: number; }
@@ -26,6 +27,25 @@ export async function retry(
     throw new Error(`Max attempts reached for request. (${attempts})`);
 }
 
+export function isPortReachable(host: string, port: number, timeout: number) {
+    return new Promise((resolve => {
+        const socket = new Socket();
+
+        const onError = () => {
+            socket.destroy();
+            resolve();
+        };
+
+        socket.setTimeout(timeout);
+        socket.on("error", onError);
+        socket.on("timeout", onError);
+
+        socket.connect(port, host, () => {
+            socket.end();
+            resolve();
+        });
+    }));
+}
 /**
  * Delay execution for ms milliseconds.
  *

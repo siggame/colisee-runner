@@ -9,7 +9,7 @@ import * as request from "request-promise-native";
 import * as winston from "winston";
 
 import * as db from "./db";
-import { identity, retry } from "./helpers";
+import { identity, isPortReachable, retry } from "./helpers";
 import { Runner } from "./runner";
 import * as vars from "./vars";
 
@@ -42,13 +42,14 @@ async function build_runner(): Promise<Runner> {
     await retry(
         { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
         async () => db.pingDatabase(),
-    ).catch((e) => { throw e; });
+    ).catch((e) => { winston.error("Database not available"); throw e; });
 
     // verify game server is available
+    const game_server_url = `http://${vars.GAME_SERVER_HOST}:${vars.GAME_SERVER_API_PORT}`;
     await retry(
         { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
-        () => request.get(`http://${vars.GAME_SERVER_HOST}:${vars.GAME_SERVER_API_PORT}`),
-    ).catch((e) => { throw e; });
+        () => isPortReachable(vars.GAME_SERVER_HOST, vars.GAME_SERVER_API_PORT, 500),
+    ).catch((e) => { winston.error(`Game server not available at ${game_server_url}`); throw e; });
 
     let docker_options: Docker.DockerOptions = {};
 
