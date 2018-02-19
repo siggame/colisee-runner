@@ -123,7 +123,7 @@ function run_game_clients(
         submissions.map(async ({ image, log, version, team: { name, id: team_id } }) => {
             if (log) {
                 const container: Docker.Container = await docker.run(`${image}`,
-                    ["-n", `${name}`, "-s", `docker.for.mac.${hostname}:${game_port}`, "-r", `${id}`],
+                    ["-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${id}`],
                     log, { name: `team_${team_id}_${id}`, HostConfig: { NetworkMode: network_name } });
                 const info = await container.inspect();
                 const data: fs.ReadStream = await container.remove({ force: true });
