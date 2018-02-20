@@ -10,6 +10,7 @@ import { HttpError } from "http-errors";
 import * as winston from "winston";
 
 import * as db from "./db";
+import { Network } from "./Docker";
 import { identity, isPortReachable, retry } from "./helpers";
 import { Runner } from "./runner";
 import * as vars from "./vars";
@@ -44,17 +45,11 @@ app.use(logger);
 async function build_runner(): Promise<Runner> {
     // verify docker is available
     const docker = new Docker();
-    const containers = await docker.listContainers()
-        .then(identity<Docker.ContainerInfo[]>())
-        .catch((error) => { winston.error("Docker daemon not available"); throw error; });
-
-    const c_runner = containers.find(
-        ({ Labels: { "com.docker.compose.service": name } }) => name === "runner",
-    );
-    let network_name = "default";
-    if (c_runner) {
-        network_name = c_runner.HostConfig.NetworkMode;
-    }
+    const networks: Network[] = await docker.listNetworks();
+    const game_network_names: string[] = networks.filter((network) =>
+        network.Name.indexOf(vars.GAME_SERVER_NETWORK) >= 0,
+    ).map(({ Name }) => Name);
+    const network_name = game_network_names.length === 0 ? "default" : game_network_names[0];
 
     // verify db is available
     await retry(
