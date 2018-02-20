@@ -28,7 +28,7 @@ async function build_runner(): Promise<Runner> {
     const docker = new Docker();
     const containers = await docker.listContainers()
         .then(identity<Docker.ContainerInfo[]>())
-        .catch((e) => { throw e; });
+        .catch((error) => { winston.error("Docker daemon not available"); throw error; });
 
     const c_runner = containers.find(
         ({ Labels: { "com.docker.compose.service": name } }) => name === "runner",
@@ -53,9 +53,9 @@ async function build_runner(): Promise<Runner> {
 
     let docker_options: Docker.DockerOptions = {};
 
-    if (vars.DOCKER_REGISTRY_HOST !== "") {
+    if (vars.REGISTRY_HOST !== "localhost") {
         docker_options = {
-            host: vars.DOCKER_REGISTRY_HOST,
+            host: vars.REGISTRY_HOST,
             port: vars.DOCKER_REGISTRY_PORT,
             protocol: "http",
         };
