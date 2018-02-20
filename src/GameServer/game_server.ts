@@ -1,4 +1,5 @@
 import * as request from "request-promise-native";
+import * as winston from "winston";
 
 export interface IGameServerClient {
     index?: number;
@@ -46,5 +47,5 @@ export async function get_game_info({ hostname, api_port, game_name }: IGameServ
                 gamelogFilename: `/gamelog/${gamelogFilename}.json.gz`,
                 ...rest,
             };
-        }).catch((e) => { throw e; });
+        }).catch((error) => { winston.error("Game server api failure"); throw error; });
 }
