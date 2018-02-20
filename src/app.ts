@@ -56,7 +56,7 @@ async function build_runner(): Promise<Runner> {
     if (vars.REGISTRY_HOST !== "localhost") {
         docker_options = {
             host: vars.REGISTRY_HOST,
-            port: vars.DOCKER_REGISTRY_PORT,
+            port: vars.REGISTRY_PORT,
             protocol: "http",
         };
     }
