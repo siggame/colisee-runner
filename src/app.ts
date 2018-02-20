@@ -4,8 +4,9 @@ dotenv.config();
 import * as cors from "cors";
 import * as Docker from "dockerode";
 import * as express from "express";
+import { ErrorRequestHandler, RequestHandler } from "express";
 import * as fs from "fs";
-import * as request from "request-promise-native";
+import { HttpError } from "http-errors";
 import * as winston from "winston";
 
 import * as db from "./db";
@@ -13,15 +14,32 @@ import { identity, isPortReachable, retry } from "./helpers";
 import { Runner } from "./runner";
 import * as vars from "./vars";
 
+winston.configure({
+    transports: [
+        new (winston.transports.Console)({
+            timestamp: true,
+        }),
+    ],
+});
+
+// Logger Middleware
+const logger: RequestHandler = (req, res, next) => {
+    winston.info(`${req.method}\t${req.url}`);
+    next();
+};
+
+// Error Middleware
+const errorHandler: ErrorRequestHandler = (err: HttpError, req, res, next) => {
+    winston.error(err.message);
+    if (err.stack) { winston.error(err.stack); }
+    res.status(err.status).end(err.message);
+};
+
 const app = express();
 
 app.use(cors());
-
-winston.configure({
-    transports: [
-        new (winston.transports.Console)(),
-    ],
-});
+app.use(errorHandler);
+app.use(logger);
 
 async function build_runner(): Promise<Runner> {
     // verify docker is available
@@ -88,7 +106,7 @@ export default () => {
     app.listen(vars.PORT, async () => {
         runner = await build_runner()
             .catch((e): any => {
-                winston.error("Building Runner Failed\n", e);
+                winston.error("Building runner failed\n", e);
                 process.exit(1);
             });
         runner.run().catch((e) => { winston.error(e); });
