@@ -65,7 +65,7 @@ export async function game_failed(error: any, game: IGame) {
 function prepare_output({ submissions, id }: IGame) {
     return submissions.map(({ log, output_url, team, version, ...rest }): IGameSubmission => {
         const filename = `client_${team.id}_${version}_${id}.log.gz`;
-        output_url = `runners/${basename(OUTPUT_DIR)}/${filename}`;
+        output_url = `/runner/${basename(OUTPUT_DIR)}/${filename}`;
         const client_log = fs.createWriteStream(`${OUTPUT_DIR}/${filename}`);
         const compressor = zlib.createGzip();
         log = new PassThrough();
