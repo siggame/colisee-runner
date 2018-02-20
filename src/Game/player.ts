@@ -1,6 +1,6 @@
 import * as Docker from "dockerode";
 import * as fs from "fs";
-import * as _ from "lodash";
+import { findIndex } from "lodash";
 import { basename } from "path";
 import { PassThrough } from "stream";
 import * as winston from "winston";
@@ -40,7 +40,7 @@ export function make_play_game(
         await db.updateSubmissions(game);
 
         const { clients, gamelogFilename } = await get_game_info(game_server_options, game.id);
-        const winner_index = _.findIndex(clients, ({ won }: IGameServerClient) => won);
+        const winner_index = findIndex(clients, ({ won }: IGameServerClient) => won);
         const [winner, loser] = (winner_index === 0 ? clients : clients.reverse());
         game.winner = game.submissions.find(({ team: { name } }) => name === winner.name);
         game.win_reason = winner.reason;
