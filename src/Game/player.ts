@@ -62,15 +62,15 @@ export async function game_failed(error: any, game: IGame) {
     return game;
 }
 
-function prepare_output({ submissions, id }: IGame) {
-    return submissions.map(({ log, output_url, team, version, ...rest }): IGameSubmission => {
-        const filename = `client_${team.id}_${version}_${id}.log.gz`;
+function prepare_output({ submissions }: IGame) {
+    return submissions.map(({ log, output_url, team, version, id: sub_id, ...rest }): IGameSubmission => {
+        const filename = `client_${team.id}_${version}_${sub_id}.log.gz`;
         output_url = `/runner/${basename(OUTPUT_DIR)}/${filename}`;
         const client_log = fs.createWriteStream(`${OUTPUT_DIR}/${filename}`);
         const compressor = zlib.createGzip();
         log = new PassThrough();
         log.pipe(compressor).pipe(client_log);
-        return { log, output_url, team, version, ...rest };
+        return { log, id: sub_id, output_url, team, version, ...rest };
     });
 }
 
@@ -92,9 +92,9 @@ function prepare_game_clients(
     ).catch((e) => { winston.error("Pull Failed"); throw e; });
 }
 
-function delayed_client_cleanup(docker: Docker, { id, submissions }: IGame, timeout: number) {
-    const game_client_names = submissions.map(({ team: { id: team_id } }) =>
-        `/team_${team_id}_${id}`,
+function delayed_client_cleanup(docker: Docker, { submissions }: IGame, timeout: number) {
+    const game_client_names = submissions.map(({ id: sub_id, team: { id: team_id } }) =>
+        `/team_${team_id}_${sub_id}`,
     );
     setTimeout(() => {
         docker.listContainers((error, containers) => {
@@ -117,14 +117,14 @@ function delayed_client_cleanup(docker: Docker, { id, submissions }: IGame, time
 function run_game_clients(
     docker: Docker,
     { hostname, game_port, network_name }: IGameServerOptions,
-    { submissions, id }: IGame,
+    { submissions, id: game_id }: IGame,
 ) {
     return Promise.all(
-        submissions.map(async ({ image, log, version, team: { name, id: team_id } }) => {
+        submissions.map(async function ({ id: sub_id, image, log, version, team: { name, id: team_id } }) {
             if (log) {
                 const container: Docker.Container = await docker.run(`${image}`,
-                    ["-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${id}`],
-                    log, { name: `team_${team_id}_${id}`, HostConfig: { NetworkMode: network_name } });
+                    ["-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${game_id}`],
+                    log, { name: `team_${team_id}_${sub_id}`, HostConfig: { NetworkMode: network_name } });
                 const info = await container.inspect();
                 const data: fs.ReadStream = await container.remove({ force: true });
                 if (data) {
