@@ -11,7 +11,7 @@ import * as winston from "winston";
 
 import * as db from "./db";
 import { Network } from "./Docker";
-import { identity, isPortReachable, retry } from "./helpers";
+import { isPortReachable, retry } from "./helpers";
 import { Runner } from "./runner";
 import * as vars from "./vars";
 
