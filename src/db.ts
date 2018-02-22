@@ -10,7 +10,7 @@ async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promi
         .where({ game_id })
         .join("submissions", "games_submissions.submission_id", "submissions.id")
         .select("games_submissions.id as id", "submissions.image_name as image",
-        "submissions.version as version", "submissions.team_id as team")
+            "submissions.version as version", "submissions.team_id as team")
         .orderBy("team");
     const teams: ITeam[] = await db.connection("teams")
         .transacting(trx)
@@ -18,7 +18,12 @@ async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promi
         .whereIn("id", subs.map((sub: any) => sub.team))
         .orderBy("id");
     return subs.map((sub: any, i: number): IGameSubmission => {
-        sub.team = teams[i];
+        const team = teams.find((team) => team.id === sub.team);
+        if (team) {
+            sub.team = team;
+        } else {
+            throw new Error(`no team for ${sub.team} found from db`);
+        }
         return sub;
     });
 }
