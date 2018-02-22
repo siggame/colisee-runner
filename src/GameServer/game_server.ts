@@ -44,7 +44,7 @@ export async function get_game_info({ hostname, api_port, game_name }: IGameServ
         .then((body): IGameServerStatus => {
             const { gamelogFilename, ...rest }: IGameServerStatus = JSON.parse(body);
             return {
-                gamelogFilename: `/gamelog/${gamelogFilename}.json.gz`,
+                gamelogFilename: `/game_server/${gamelogFilename}.json.gz`,
                 ...rest,
             };
         }).catch((error) => { winston.error("Game server api failure"); throw error; });
