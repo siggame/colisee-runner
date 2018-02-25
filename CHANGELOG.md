@@ -8,7 +8,7 @@
 [<release_header>]: # (## [{version}] - {year}-{month}-{day})
 [<release_description>]: # (*)
 [<release_ref>]: # ([{version}]: {compare})
-[<current>]: # (v1.0.0)
+[<current>]: # (v1.0.1)
 [//]: # (<end>)
 
 All notable changes to colisee-runner will be documented in this file.
@@ -21,13 +21,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
  
 
-[Unreleased]: https://github.com/siggame/colisee-runner/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/siggame/colisee-runner/compare/v1.0.1...HEAD
 [//]: # (<end>)
 
 [//]: # (<release>)
+## [v1.0.1] - 2018-2-25
+
+* Update service version
+
+[v1.0.1]: https://github.com/siggame/colisee-runner/compare/v1.0.0...v1.0.1
+[//]: # (<end>)
 ## [v1.0.0] - 2018-2-25
 
 * Arena deployed for CS5400 AI to run Chess
 
 [v1.0.0]: https://github.com/siggame/colisee-runner/compare/v0.0.0...v1.0.0
-[//]: # (<end>)
