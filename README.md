@@ -5,7 +5,8 @@ The runner service is responsible for claiming and processing queued games.
 [![Travis](https://img.shields.io/travis/siggame/colisee-runner.svg?style=flat-square)](https://travis-ci.org/siggame/colisee-runner)
 [![Docker Pulls](https://img.shields.io/docker/pulls/siggame/colisee-runner.svg?style=flat-square)](https://hub.docker.com/r/siggame/colisee-runner/)
 [![GitHub Tag](https://img.shields.io/github/tag/siggame/colisee-runner.svg?style=flat-square)](https://github.com/siggame/colisee-runner/tags)
-[![Dependencies](https://img.shields.io/david/siggame/colisee-runner.svg)](https://github.com/siggame/colisee-runner)
+[![dependencies Status](https://david-dm.org/siggame/colisee-runner/status.svg)](https://david-dm.org/siggame/colisee-runner)
+[![devDependencies Status](https://david-dm.org/siggame/colisee-runner/dev-status.svg)](https://david-dm.org/siggame/colisee-runner?type=dev)
 
 ## Table Of Contents
 
