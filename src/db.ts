@@ -1,8 +1,10 @@
 import { db } from "@siggame/colisee-lib";
 import * as knex from "knex";
+import { basename } from "path";
 import * as winston from "winston";
 
 import { IGame, IGameSubmission, ITeam } from "./Game";
+import { OUTPUT_DIR } from "./vars";
 
 async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promise<IGameSubmission[]> {
     const subs = await db.connection("games_submissions")
@@ -11,7 +13,8 @@ async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promi
         .join("submissions", "games_submissions.submission_id", "submissions.id")
         .select("games_submissions.id as id", "submissions.image_name as image",
             "submissions.version as version", "submissions.team_id as team")
-        .orderBy("team");
+        .orderBy("team")
+        .then((rows): IGameSubmission[] => rows);
     const teams: ITeam[] = await db.connection("teams")
         .transacting(trx)
         .select("id", "name")
@@ -21,6 +24,8 @@ async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promi
         const team = teams.find((team) => team.id === sub.team);
         if (team) {
             sub.team = team;
+            const filename = `client_${team.id}_${sub.version}_${sub.id}.log.gz`;
+            sub.output_url = `/runner/${basename(OUTPUT_DIR)}/${filename}`;
         } else {
             throw new Error(`no team for ${sub.team} found from db`);
         }
@@ -36,12 +41,17 @@ async function getGameSubmissions(trx: knex.Transaction, game_id: number): Promi
  * @export
  */
 export async function getQueuedGame(): Promise<IGame | undefined> {
-    const queuedGames = db.connection("games").select("id").where({ status: "queued" }).orderBy("created_at").limit(1).forUpdate();
+    const queued_game_ids = db.connection("games")
+        .select("id")
+        .where({ status: "queued" })
+        .orderBy("created_at")
+        .limit(1)
+        .forUpdate();
     return db.connection.transaction(async (trx): Promise<IGame> => {
         const [gameInfo] = await db.connection("games")
             .transacting(trx)
             .update({ status: "playing" }, "*")
-            .whereIn("id", queuedGames)
+            .whereIn("id", queued_game_ids)
             .then(db.rowsToGames);
         if (gameInfo === undefined) { throw new TypeError("gameInfo is undefined."); }
         const submissions = await getGameSubmissions(trx, gameInfo.id);
@@ -52,7 +62,7 @@ export async function getQueuedGame(): Promise<IGame | undefined> {
             status: "playing",
             submissions,
         };
-    }).catch((e) => undefined);
+    }).catch((error) => undefined);
 }
 
 /**
@@ -61,7 +71,7 @@ export async function getQueuedGame(): Promise<IGame | undefined> {
  *
  * @export
  */
-export async function updateEndedGame({ id, log_url, lose_reason, winner, win_reason }: IGame): Promise<void> {
+export function updateEndedGame({ id, log_url, lose_reason, winner, win_reason }: IGame) {
     if (winner === undefined) { throw TypeError("Winner is undefined."); }
     const { team: { id: winner_id } } = winner;
     return db.connection.transaction(async (trx) => {
@@ -69,7 +79,7 @@ export async function updateEndedGame({ id, log_url, lose_reason, winner, win_re
             .transacting(trx)
             .update({ log_url, lose_reason, status: "finished", winner_id, win_reason })
             .where({ id });
-    }).catch((e) => { winston.error("Update Failure\n", e); throw e; });
+    }).catch((error) => { winston.error("Update Failure"); throw error; });
 }
 
 /**
@@ -77,13 +87,13 @@ export async function updateEndedGame({ id, log_url, lose_reason, winner, win_re
  *
  * @export
  */
-export async function updateFailedGame({ id }: IGame): Promise<void> {
+export function updateFailedGame({ id }: IGame) {
     return db.connection.transaction(async (trx) => {
         await db.connection("games")
             .transacting(trx)
             .update({ status: "failed" })
             .where({ id });
-    }).catch((e) => { winston.error("Update Failure\n", e); throw e; });
+    }).catch((error) => { winston.error("Update Failure"); throw error; });
 }
 
 /**
@@ -92,18 +102,17 @@ export async function updateFailedGame({ id }: IGame): Promise<void> {
  *
  * @export
  */
-export async function updateSubmissions({ submissions }: IGame): Promise<void> {
+export function updateSubmissions({ submissions }: IGame) {
     return db.connection.transaction(async (trx) => {
-        await Promise.all(
+        return await Promise.all(
             submissions.map(({ id, output_url }: IGameSubmission) =>
                 db.connection("games_submissions")
                     .transacting(trx)
                     .update({ output_url }, "*")
-                    .where({ id })
-                    .thenReturn(),
+                    .where({ id }),
             ),
         );
-    }).catch((e) => { throw e; });
+    }).catch((error) => { throw error; });
 }
 
 /**

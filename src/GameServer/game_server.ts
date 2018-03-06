@@ -1,3 +1,5 @@
+import { lookup } from "dns";
+import { findIndex } from "lodash";
 import * as request from "request-promise-native";
 import * as winston from "winston";
 
@@ -22,7 +24,6 @@ export interface IGameServerOptions {
     game_port: number;
     game_name: string;
     hostname: string;
-    network_name: string;
 }
 
 export interface IGameServerStatus {
@@ -35,17 +36,53 @@ export interface IGameServerStatus {
 }
 
 /**
- * Query the game server for information about the session with sessionId.
+ * Class to support communication with the game server
  *
  * @export
+ * @class GameServer
  */
-export async function get_game_info({ hostname, api_port, game_name }: IGameServerOptions, sessionId: number): Promise<IGameServerStatus> {
-    return request.get(`http://${hostname}:${api_port}/status/${game_name}/${sessionId}`)
-        .then((body): IGameServerStatus => {
-            const { gamelogFilename, ...rest }: IGameServerStatus = JSON.parse(body);
-            return {
-                gamelogFilename: `/game_server/${gamelogFilename}.json.gz`,
-                ...rest,
-            };
-        }).catch((error) => { winston.error("Game server api failure"); throw error; });
+export class GameServer {
+
+    private api_url: string;
+    public game_url: string;
+
+    constructor(public options: IGameServerOptions) {
+        this.api_url = `http://${this.options.hostname}:${this.options.api_port}/status/${this.options.game_name}`;
+        this.game_url = `${this.options.hostname}:${this.options.game_port}`;
+    }
+
+    /**
+     * Query the game server for information about the session with sessionId.
+     *
+     * @param {number} session_id
+     * @returns Promise<{
+     * gamelogFilename: string,
+     * loser: IGameServerClient,
+     * winner: IGameServerClient,
+     * }>
+     * @memberof GameServer
+     */
+    public async get_game_info(session_id: number) {
+        const { clients, gamelogFilename }: IGameServerStatus = await request.get({ json: true, url: `${this.api_url}/${session_id}` })
+            .catch((error) => { winston.error("Game server api failure"); throw error; });
+        if (clients.length === 0) { throw new Error("Clients did not connect properly"); }
+        const winner_index = findIndex(clients, ({ won }: IGameServerClient) => won);
+        const [winner, loser] = (winner_index === 0 ? clients : clients.reverse());
+        return {
+            gamelogFilename: `/game_server/${gamelogFilename}.json.gz`,
+            loser,
+            winner,
+        };
+    }
+
+    public get_ip_addr() {
+        return new Promise((res, rej) => {
+            lookup(this.options.hostname, (error, addr, family) => {
+                if (error) {
+                    rej(error);
+                }
+                res(addr);
+            });
+        }).catch((error) => { winston.error("failed to lookup ip for game_server"); throw error; });
+    }
 }

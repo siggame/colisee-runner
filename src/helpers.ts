@@ -46,6 +46,7 @@ export function isPortReachable(host: string, port: number, timeout: number) {
         });
     }));
 }
+
 /**
  * Delay execution for ms milliseconds.
  *

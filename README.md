@@ -6,8 +6,6 @@ The runner service is responsible for claiming and processing queued games.
 [![Docker Pulls](https://img.shields.io/docker/pulls/siggame/colisee-runner.svg?style=flat-square)](https://hub.docker.com/r/siggame/colisee-runner/)
 [![GitHub Tag](https://img.shields.io/github/tag/siggame/colisee-runner.svg?style=flat-square)](https://github.com/siggame/colisee-runner/tags)
 [![Dependencies](https://img.shields.io/david/siggame/colisee-runner.svg)](https://github.com/siggame/colisee-runner)
-[![NPM Version](https://img.shields.io/npm/v/@siggame/colisee-runner.svg?style=flat-square)](https://www.npmjs.com/package/@siggame/colisee-runner)
-[![NPM Total Downloads](https://img.shields.io/npm/dt/@siggame/colisee-runner.svg?style=flat-square)](https://www.npmjs.com/package/@siggame/colisee-runner)
 
 ## Table Of Contents
 
@@ -44,17 +42,17 @@ npm run build
 
 ## Usage
 
-#### API
+### API
 
-##### `GET /status`
+#### `GET /status`
 
 Returns the list of games currently in the runner's queue.
 
-#### Environment Variables
+### Environment Variables
 
 A `.env` file is the preferred method for setting these variables. Simply add a new line for each variable override.
 
-##### Runner Settings
+#### Runner Settings
 
 - `OUTPUT_DIR`: output directory
 - `PORT`: port number to host the `/status` endpoint
@@ -62,7 +60,15 @@ A `.env` file is the preferred method for setting these variables. Simply add a 
 - `RUNNER_QUEUE_LIMIT`: size limit on runner queue
 - `TIMEOUT`: timeout between attempts
 
-##### Database Settings `*`
+#### Client Settings
+
+- `CLIENT_CPU_PERIOD`: defines the total demand available for the cpu
+- `CLIENT_CPU_QUOTA`: amount of cpu "time" the container can use in a period
+- `CLIENT_MEMORY_LIMIT`: client container memory limit
+- `CLIENT_NETWORK`: isolated client network name
+- `CLIENT_USER`: user used to execute container
+
+#### Database Settings `*`
 
 - `DB_HOST`: hostname for postgresql
 - `DB_PORT`: port for postgresql
@@ -70,18 +76,22 @@ A `.env` file is the preferred method for setting these variables. Simply add a 
 - `DB_PASSWORD`: password for postgresql
 - `DB_DB`: db name for postgresql
 
-##### Docker Registry Settings
+#### Docker Host Settings
+
+- `DOCKER_HOST`: hostname where docker is located
+- `DOCKER_PORT`: port where docker is listening for connections
+
+#### Docker Registry Settings
 
 - `REGISTRY_HOST`: hostname of container registry
 - `REGISTRY_PORT`: port of container registry
 
-##### Game Server Settings
+#### Game Server Settings
 
 - `GAME_NAME`: name of the game being played
 - `GAME_SERVER_API_PORT`: port for the game server api
 - `GAME_SERVER_GAME_PORT`: port for the game communication
 - `GAME_SERVER_HOST`: hostname of the game server
-- `GAME_SERVER_NETWORK`: name of the network needed for some deployments
 
 To see defaults for these values refer to `src/vars.ts`;
 

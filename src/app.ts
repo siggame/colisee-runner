@@ -10,9 +10,8 @@ import { HttpError } from "http-errors";
 import * as winston from "winston";
 
 import * as db from "./db";
-import { Network } from "./Docker";
 import { isPortReachable, retry } from "./helpers";
-import { Runner } from "./runner";
+import { Runner } from "./Runner";
 import * as vars from "./vars";
 
 winston.configure({
@@ -43,36 +42,32 @@ app.use(errorHandler);
 app.use(logger);
 
 async function build_runner(): Promise<Runner> {
-    // verify docker is available
-    const docker = new Docker();
-    const networks: Network[] = await docker.listNetworks();
-    const game_network_names: string[] = networks.filter((network) =>
-        network.Name.indexOf(vars.GAME_SERVER_NETWORK) >= 0,
-    ).map(({ Name }) => Name);
-    const network_name = game_network_names.length === 0 ? "default" : game_network_names[0];
+    const docker_options: Docker.DockerOptions = vars.DOCKER_HOST !== "" && vars.DOCKER_PORT > 443 ? {
+        host: vars.DOCKER_HOST,
+        port: vars.DOCKER_PORT,
+    } : { socketPath: "/var/run/docker.sock" };
 
-    // verify db is available
-    await retry(
-        { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
-        async () => db.pingDatabase(),
-    ).catch((e) => { winston.error("Database not available"); throw e; });
-
-    // verify game server is available
+    const docker = new Docker(docker_options);
     const game_server_url = `http://${vars.GAME_SERVER_HOST}:${vars.GAME_SERVER_API_PORT}`;
-    await retry(
-        { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
-        () => isPortReachable(vars.GAME_SERVER_HOST, vars.GAME_SERVER_API_PORT, 500),
-    ).catch((e) => { winston.error(`Game server not available at ${game_server_url}`); throw e; });
+    await Promise.all([
+        // verify docker is available
+        retry(
+            { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
+            () => docker.info(),
+        ).catch((error) => { winston.error("Docker not available"); throw error; }),
 
-    let docker_options: Docker.DockerOptions = {};
+        // verify db is available
+        retry(
+            { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
+            () => db.pingDatabase(),
+        ).catch((error) => { winston.error("Database not available"); throw error; }),
 
-    if (vars.REGISTRY_HOST !== "localhost") {
-        docker_options = {
-            host: vars.REGISTRY_HOST,
-            port: vars.REGISTRY_PORT,
-            protocol: "http",
-        };
-    }
+        // verify game server is available
+        retry(
+            { attempts: vars.RETRY_ATTEMPTS, timeout: vars.TIMEOUT },
+            () => isPortReachable(vars.GAME_SERVER_HOST, vars.GAME_SERVER_API_PORT, 500),
+        ).catch((error) => { winston.error(`Game server not available at ${game_server_url}`); throw error; }),
+    ]);
 
     return new Runner({
         docker_options,
@@ -81,7 +76,6 @@ async function build_runner(): Promise<Runner> {
             game_name: vars.GAME_NAME,
             game_port: vars.GAME_SERVER_GAME_PORT,
             hostname: vars.GAME_SERVER_HOST,
-            network_name,
         },
         queue_limit: vars.RUNNER_QUEUE_LIMIT,
     });
@@ -104,8 +98,11 @@ export default () => {
                 winston.error("Building runner failed\n", e);
                 process.exit(1);
             });
-        runner.run().catch((e) => { winston.error(e); });
         winston.info(`Listening on port ${vars.PORT}...`);
+        runner.run()
+            .catch((error) => {
+                winston.error(error);
+            });
     });
 };
 
