@@ -3,6 +3,7 @@
 .vscode/
 .vagrant/
 .env
+.env.*
 
 # Compiled & Generated
 *.js
