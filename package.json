@@ -7,7 +7,7 @@
     "@siggame/colisee-lib": "^0.3.1",
     "core-js": "^2.5.3",
     "cors": "^2.8.4",
-    "dockerode": "^2.5.3",
+    "dockerode": "^2.5.4",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
     "http-errors": "^1.6.2",
@@ -17,7 +17,7 @@
     "winston": "^2.4.0"
   },
   "devDependencies": {
-    "@siggame/colisee-tslint": "^1.0.3",
+    "@siggame/colisee-tslint": "^1.0.4",
     "@types/chai": "^4.1.2",
     "@types/core-js": "^0.9.46",
     "@types/cors": "^2.8.3",
