@@ -3,7 +3,7 @@ import { Readable } from "stream";
 import * as winston from "winston";
 
 import * as db from "../db";
-import { IContainer } from "../Docker";
+import { IContainer, IListContainerFilter } from "../Docker";
 import { IGame } from "../Game";
 import { GameServer, IGameServerOptions } from "../GameServer";
 import { async_foreach, delay } from "../helpers";
@@ -60,9 +60,9 @@ export class Player extends Docker {
         this.delayed_client_cleanup(clients, 60/* seconds */);
         // pull client images
         await this.pull_clients(clients);
+        // run client containers
         await this.run_clients(clients);
         game.status = "playing";
-        // run client containers
         game.end_time = Date.now();
         await db.updateSubmissions(game);
         const { winner, loser, gamelogFilename: output_url } = await this.game_server.get_game_info(game.id);
@@ -89,7 +89,7 @@ export class Player extends Docker {
     private async delayed_client_cleanup(clients: IContainer[], seconds: number) {
         await delay(seconds * 1000);
         // need to add '/' prefix as that is appended to the container names
-        const filter_by_name = { name: clients.map((client) => `/${client.createOptions.name}`) };
+        const filter_by_name: IListContainerFilter = { name: clients.map((client) => `/${client.createOptions.name}`) };
         // TODO: add filters interface corresponding to container list api
         // https://docs.docker.com/engine/api/v1.36/#operation/ContainerList
         const client_containers = await this.listContainers({ all: true, filters: filter_by_name })
