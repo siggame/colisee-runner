@@ -100,10 +100,7 @@ To see defaults for these values refer to `src/vars.ts`;
 
 ## Contributors
 
-- [Russley Shaw](https://github.com/russleyshaw)
 - [user404d](https://github.com/user404d)
-- [Hannah Reinbolt](https://github.com/LoneGalaxy)
-- [Matthew Qualls](https://github.com/MatthewQualls)
 
 ## Change Log
 
