@@ -1,21 +1,26 @@
 import { PassThrough } from "stream";
 
-export interface IContainer {
-    image: string;
-    cmd: string[];
-    outputStream: PassThrough;
-    createOptions: {
-        HostConfig: {
-            CpuPeriod: number; /* TODO: Investigate exactly how useful these are */
-            CpuQuota: number;
-            ExtraHosts?: string[];
-            Memory: number;
-            MemorySwap: number;
-            NetworkMode: string;
-        };
-        name: string;
-        User: string;
+export interface IContainerCreateOptions {
+    HostConfig: {
+        AutoRemove: boolean;
+        CpuPeriod: number; /* TODO: Investigate exactly how useful these are */
+        CpuQuota: number;
+        ExtraHosts?: string[];
+        Memory: number;
+        MemorySwap: number;
+        NetworkMode: string;
     };
+    name: string;
+    StopTimeout: number;
+    User: string;
+}
+
+export interface IContainer {
+    cmd: string[];
+    createOptions: IContainerCreateOptions;
+    id?: string;
+    image: string;
+    outputStream: PassThrough;
     startOptions?: {};
 }
 

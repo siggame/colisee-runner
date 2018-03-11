@@ -4,7 +4,7 @@ import * as winston from "winston";
 import { get_game_stream, IGame } from "../Game";
 import { IGameServerOptions } from "../GameServer";
 import { consumer, delay, send } from "../helpers";
-import { Player } from "../Player";
+import { IPlayableGame, Player } from "../Player";
 import { RUNNER_QUEUE_LIMIT } from "../vars";
 
 export interface IRunnerOptions {
@@ -42,7 +42,7 @@ export class Runner {
      */
     public run() {
         return send(this.player.results(),
-            consumer(({ id, status }: IGame): void => {
+            consumer(({ game: { id, status } }: IPlayableGame): void => {
                 winston.info(`Game ${id} is ${status}`);
             }),
         );
