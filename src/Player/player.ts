@@ -5,6 +5,7 @@ import * as db from "../db";
 import { IGame } from "../Game";
 import { GameServer, IGameServerOptions } from "../GameServer";
 import { async_foreach, map } from "../helpers";
+import { CLIENT_TIMEOUT } from "../vars";
 import { Client } from "./client";
 
 export interface IPlayableGame {
@@ -19,10 +20,9 @@ export interface IPlayableGame {
  * @class Player
  * @extends {Docker}
  */
-export class Player extends Docker {
+export class Player {
 
     private game_server: GameServer;
-    private playable_game_queue: AsyncIterableIterator<IPlayableGame>;
 
     /**
      * Creates an instance of Player.
@@ -31,55 +31,36 @@ export class Player extends Docker {
      * @param {Docker.DockerOptions} [options]
      * @memberof Player
      */
-    constructor(
-        game_queue: AsyncIterableIterator<IGame>,
-        game_server_options: IGameServerOptions,
-        options?: Docker.DockerOptions,
-    ) {
-        super(options);
+    constructor(game_server_options: IGameServerOptions, private options: Docker.DockerOptions) {
         this.game_server = new GameServer(game_server_options);
-        this.playable_game_queue = map(game_queue,
-            async (game: IGame): Promise<IPlayableGame> =>
-                ({
-                    clients: game.submissions.map((submission) =>
-                        new Client(submission, this.game_server, game.id, options ? options : {})),
-                    game,
-                }),
-            async (error, game) => {
-                winston.error("unable to create playable game");
-                return { clients: [], ...game };
-            });
-    }
-
-    /**
-     * Create the pipeline for playing games from the game queue
-     *
-     * @returns AsyncIterableIterator<IGame>
-     * @memberof Player
-     */
-    public results() {
-        return async_foreach(this.playable_game_queue, (game) => this.play(game), (error, game) => this.game_failed(error, game));
     }
 
     /**
      * Play a game
      */
-    private async play({ clients, game }: IPlayableGame) {
-        if (clients.length === 0) { throw new Error("No clients to play with"); }
-        // pull client images
-        await this.pull_clients(clients);
-        game.status = "playing";
-        // run client containers
-        await this.run_clients(clients);
-        game.end_time = Date.now();
-        await db.updateSubmissions(game);
-        const { winner, loser, gamelogFilename: output_url } = await this.game_server.get_game_info(game.id);
-        game.winner = game.submissions.find((submission) => submission.team.name === winner.name);
-        game.win_reason = winner.reason;
-        game.lose_reason = loser.reason;
-        game.log_url = output_url;
-        await db.updateEndedGame(game);
-        game.status = "finished";
+    public async play(game: IGame) {
+        const clients: Client[] = [];
+        try {
+            clients.push(...game.submissions.map((sub) => new Client(sub, this.game_server, game.id, this.options)));
+            if (clients.length === 0) { throw new Error("No clients to play with"); }
+            // pull client images
+            await this.pull_clients(clients);
+            game.status = "playing";
+            // run client containers
+            await this.run_clients(clients);
+            game.end_time = Date.now();
+            await db.updateSubmissions(game);
+            const { winner, loser, gamelogFilename: output_url } = await this.game_server.get_game_info(game.id);
+            game.winner = game.submissions.find((submission) => submission.team.name === winner.name);
+            game.win_reason = winner.reason;
+            game.lose_reason = loser.reason;
+            game.log_url = output_url;
+            await db.updateEndedGame(game);
+            game.status = "finished";
+        } catch (error) {
+            winston.error("Game Failure\n", game, "\n", error);
+            await this.game_failed(clients, game);
+        }
     }
 
     /**
@@ -108,9 +89,7 @@ export class Player extends Docker {
      */
     private async run_clients(clients: Client[]) {
         try {
-            await Promise.all(clients.map(async (client) =>
-                await client.run(1 /* TODO: add support for env var? CLIENT_TIMEOUT?? */)),
-            );
+            await Promise.all(clients.map(async (client) => await client.run(CLIENT_TIMEOUT)));
         } catch (error) {
             winston.error("Run Failed");
             throw error;
@@ -126,14 +105,13 @@ export class Player extends Docker {
      * @returns Promise<IGame>
      * @memberof Player
      */
-    private async game_failed(error: any, { clients, game }: IPlayableGame) {
+    private async game_failed(clients: Client[], game: IGame) {
         try {
             await Promise.all(clients.map(async (client) => await client.stop()));
         } catch (error) {
             winston.error("unable to stop clients\n", clients, "\n", error);
         }
-        winston.error("Game Failure\n", game, "\n", error);
-        game.status = "failed";
         await db.updateFailedGame(game);
+        game.status = "failed";
     }
 }

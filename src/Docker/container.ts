@@ -1,4 +1,4 @@
-import { PassThrough } from "stream";
+import { Writable } from "stream";
 
 export interface IContainerCreateOptions {
     HostConfig: {
@@ -20,7 +20,7 @@ export interface IContainer {
     createOptions: IContainerCreateOptions;
     id?: string;
     image: string;
-    outputStream: PassThrough;
+    outputStream: Writable;
     startOptions?: {};
 }
 

@@ -12,8 +12,5 @@ import { IGame, is_game } from "./game";
  */
 export function get_game_stream(ms: number = 100): AsyncIterableIterator<IGame> {
     const games = map(generate(delay, ms), (ignore: any) => db.getQueuedGame(), (error, value) => { throw error; });
-    // TODO: introduce longer delay after many failed attempts to enqueue game
-    // the idea being that this will reduce strain on the db as well as the host
-    // where the runner is executing, maybe something exponential with an upper bound?
     return filter(games, is_game);
 }

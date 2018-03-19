@@ -83,8 +83,15 @@ async function build_runner(): Promise<Runner> {
 
 let runner: Runner;
 
-app.get("/status", (req, res) => {
-    res.json(runner.games);
+app.get("/start", (req, res) => {
+    winston.info("starting runner");
+    runner.start();
+    res.end();
+});
+
+app.get("/stop", async (req, res) => {
+    winston.info("stopping runner");
+    await runner.stop();
     res.end();
 });
 
@@ -93,16 +100,14 @@ export default () => {
         fs.mkdirSync(vars.OUTPUT_DIR);
     }
     app.listen(vars.PORT, async () => {
-        runner = await build_runner()
-            .catch((e): any => {
-                winston.error("Building runner failed\n", e);
-                process.exit(1);
-            });
+        try {
+            runner = await build_runner();
+        } catch (error) {
+            winston.error("runner dependecies not met\n", error);
+            process.exit(1);
+        }
         winston.info(`Listening on port ${vars.PORT}...`);
-        runner.run()
-            .catch((error) => {
-                winston.error(error);
-            });
+        runner.start();
     });
 };
 

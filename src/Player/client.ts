@@ -22,24 +22,19 @@ export class Client {
         docker_options: Docker.DockerOptions,
     ) {
         if (output_url == null) { throw new Error("output_url was null"); }
-        const client_log = fs.createWriteStream(`${OUTPUT_DIR}/${basename(output_url)}`);
-        const compressor = zlib.createGzip();
-        const log = new PassThrough();
-        log.pipe(compressor).pipe(client_log);
         this.container = {
             cmd: ["-n", `${name}`, "-s", game_server.game_url, "-r", `${game_id}`, game_server.options.game_name],
             createOptions: {
                 HostConfig: {
                     AutoRemove: true, CpuPeriod: CLIENT_CPU_PERIOD, CpuQuota: CLIENT_CPU_QUOTA,
                     Memory: CLIENT_MEMORY_LIMIT, MemorySwap: CLIENT_MEMORY_LIMIT, NetworkMode: CLIENT_NETWORK,
-
                 },
                 StopTimeout: 0,
                 User: CLIENT_USER,
                 name: `team_${team_id}_${sub_id}`,
             },
             image,
-            outputStream: log,
+            outputStream: zlib.createGzip().pipe(fs.createWriteStream(`${OUTPUT_DIR}/${basename(output_url)}`)),
         };
         this.docker = new Docker(docker_options);
     }
@@ -59,7 +54,7 @@ export class Client {
         }
     }
 
-    public async run(client_timeout: number = 15) {
+    public async run(client_timeout: number) {
         if (client_timeout <= 0) { throw new Error(`timeout must be non-zero positive integer (given ${client_timeout})`); }
         // workaround for docker library closing outputStream when run finishes
         const log = new PassThrough();
