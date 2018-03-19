@@ -16,6 +16,7 @@ export class Client {
     private docker: Docker;
 
     constructor(
+        index: number,
         { id: sub_id, image, output_url, team: { name, id: team_id } }: IGameSubmission,
         game_server: GameServer,
         game_id: number,
@@ -23,7 +24,7 @@ export class Client {
     ) {
         if (output_url == null) { throw new Error("output_url was null"); }
         this.container = {
-            cmd: ["-n", `${name}`, "-s", game_server.game_url, "-r", `${game_id}`, game_server.options.game_name],
+            cmd: ["-i", `${index}`, "-n", `${name}`, "-s", game_server.game_url, "-r", `${game_id}`, game_server.options.game_name],
             createOptions: {
                 HostConfig: {
                     AutoRemove: true, CpuPeriod: CLIENT_CPU_PERIOD, CpuQuota: CLIENT_CPU_QUOTA,

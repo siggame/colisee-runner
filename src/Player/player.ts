@@ -18,7 +18,10 @@ export class Player {
     public async play(game: IGame) {
         const clients: Client[] = [];
         try {
-            clients.push(...game.submissions.map((sub) => new Client(sub, this.game_server, game.id, this.options)));
+            clients.push(...game.submissions
+                .sort((sub_a, sub_b) => sub_a.id - sub_b.id)
+                .map((sub, index) => new Client(index, sub, this.game_server, game.id, this.options))
+            );
             if (clients.length === 0) { throw new Error("No clients to play with"); }
             // pull client images
             await this.pull_clients(clients);
