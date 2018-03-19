@@ -114,7 +114,12 @@ function run_game_clients(
                     if (!on_time) {
                         winston.error("client timeout reached");
                         log.write("\n\ntimeout reached");
-                        docker.getContainer(`team_${team_id}_${sub_id}`).stop();
+                        const [container] = await docker.listContainers({ limit: 1, filters: { name: `/team_${team_id}_${sub_id}` } });
+                        try {
+                            await docker.getContainer(container.Id).stop();
+                        } catch (error) {
+                            winston.error("failed to stop container");
+                        }
                     }
                 } catch (error) {
                     throw error;
