@@ -105,7 +105,7 @@ function run_game_clients(
                         const on_time = await Promise.race([
                             delay(15 * 60 * 1000).then(_ => false),
                             docker.run(`${image}`,
-                                ["--index", `${index}`, "-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${game_id}`],
+                                ["-i", `${index}`, "-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${game_id}`],
                                 temp, {
                                     HostConfig: { AutoRemove: true, NetworkMode: network_name },
                                     StopTimeout: 1,
