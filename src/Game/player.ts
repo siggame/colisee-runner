@@ -96,38 +96,39 @@ function run_game_clients(
     { submissions, id: game_id }: IGame,
 ) {
     return Promise.all(
-        submissions.map(async function ({ id: sub_id, image, log, version, team: { name, id: team_id } }) {
-            if (log) {
-                const temp = new PassThrough();
-                temp.pipe(log, { end: false });
-                try {
-                    const on_time = await Promise.race([
-                        delay(15 * 60 * 1000).then(_ => false),
-                        docker.run(`${image}`,
-                            ["-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${game_id}`],
-                            temp, {
-                                HostConfig: { AutoRemove: true, NetworkMode: network_name },
-                                StopTimeout: 1,
-                                name: `team_${team_id}_${sub_id}`,
-                            },
-                        ).then(_ => true),
-                    ]);
-                    if (!on_time) {
-                        winston.error("client timeout reached");
-                        log.write("\n\ntimeout reached");
-                        const [container] = await docker.listContainers({ limit: 1, filters: { name: `/team_${team_id}_${sub_id}` } });
-                        try {
-                            await docker.getContainer(container.Id).stop();
-                        } catch (error) {
-                            winston.error("failed to stop container");
+        submissions.sort((sub_a, sub_b) => sub_a.id - sub_b.id)
+            .map(async ({ id: sub_id, image, log, version, team: { name, id: team_id } }, index): Promise<void> => {
+                if (log) {
+                    const temp = new PassThrough();
+                    temp.pipe(log, { end: false });
+                    try {
+                        const on_time = await Promise.race([
+                            delay(15 * 60 * 1000).then(_ => false),
+                            docker.run(`${image}`,
+                                ["--index", `${index}`, "-n", `${name}`, "-s", `${hostname}:${game_port}`, "-r", `${game_id}`],
+                                temp, {
+                                    HostConfig: { AutoRemove: true, NetworkMode: network_name },
+                                    StopTimeout: 1,
+                                    name: `team_${team_id}_${sub_id}`,
+                                },
+                            ).then(_ => true),
+                        ]);
+                        if (!on_time) {
+                            winston.error("client timeout reached");
+                            log.write("\n\ntimeout reached");
+                            const [container] = await docker.listContainers({ limit: 1, filters: { name: `/team_${team_id}_${sub_id}` } });
+                            try {
+                                await docker.getContainer(container.Id).stop();
+                            } catch (error) {
+                                winston.error("failed to stop container");
+                            }
                         }
+                    } catch (error) {
+                        throw error;
+                    } finally {
+                        log.end();
                     }
-                } catch (error) {
-                    throw error;
-                } finally {
-                    log.end();
                 }
-            }
-        }),
+            }),
     ).catch((e) => { winston.error("Run Failed"); throw e; });
 }
