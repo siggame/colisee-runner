@@ -1,7 +1,5 @@
 import "core-js/modules/es7.symbol.async-iterator";
 
-import { Deque } from "tstl";
-
 import { delay } from "../helpers";
 import { IGame } from "./game";
 import { get_game_stream } from "./stream";

@@ -4,40 +4,17 @@ import * as winston from "winston";
 import * as db from "../db";
 import { IGame } from "../Game";
 import { GameServer, IGameServerOptions } from "../GameServer";
-import { async_foreach, map } from "../helpers";
 import { CLIENT_TIMEOUT } from "../vars";
 import { Client } from "./client";
 
-export interface IPlayableGame {
-    clients: Client[];
-    game: IGame;
-}
-
-/**
- * Player which communicates with Docker to run clients
- *
- * @export
- * @class Player
- * @extends {Docker}
- */
 export class Player {
 
     private game_server: GameServer;
 
-    /**
-     * Creates an instance of Player.
-     * @param {AsyncIterableIterator<IGame>} game_queue
-     * @param {IGameServerOptions} game_server_options
-     * @param {Docker.DockerOptions} [options]
-     * @memberof Player
-     */
     constructor(game_server_options: IGameServerOptions, private options: Docker.DockerOptions) {
         this.game_server = new GameServer(game_server_options);
     }
 
-    /**
-     * Play a game
-     */
     public async play(game: IGame) {
         const clients: Client[] = [];
         try {
@@ -63,14 +40,6 @@ export class Player {
         }
     }
 
-    /**
-     * Attempts to pull client images in preparation to run them as containers
-     *
-     * @private
-     * @param {Client[]} clients
-     * @returns Promise<void>
-     * @memberof Player
-     */
     private async pull_clients(clients: Client[]) {
         try {
             await Promise.all(clients.map(async (client) => await client.pull()));
@@ -79,14 +48,7 @@ export class Player {
             throw error;
         }
     }
-    /**
-     * Run client image as a container with appropriate params
-     *
-     * @private
-     * @param {Client[]} clients
-     * @returns Promise<void>
-     * @memberof Player
-     */
+
     private async run_clients(clients: Client[]) {
         try {
             await Promise.all(clients.map(async (client) => await client.run(CLIENT_TIMEOUT)));
@@ -96,15 +58,6 @@ export class Player {
         }
     }
 
-    /**
-     * Log errors and update db that the game failed
-     *
-     * @private
-     * @param {*} error
-     * @param {IGame} game
-     * @returns Promise<IGame>
-     * @memberof Player
-     */
     private async game_failed(clients: Client[], game: IGame) {
         try {
             await Promise.all(clients.map(async (client) => await client.stop()));

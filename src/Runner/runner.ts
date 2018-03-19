@@ -1,10 +1,9 @@
 import * as Docker from "dockerode";
 import * as winston from "winston";
 
-import { GameQueue, IGame } from "../Game";
+import { GameQueue } from "../Game";
 import { IGameServerOptions } from "../GameServer";
-import { consumer, delay, send } from "../helpers";
-import { IPlayableGame, Player } from "../Player";
+import { Player } from "../Player";
 import { RUNNER_QUEUE_LIMIT } from "../vars";
 
 export interface IRunnerOptions {
@@ -13,12 +12,6 @@ export interface IRunnerOptions {
     queue_limit: number;
 }
 
-/**
- * The runner is responsible for ingesting games into a queue and
- * running a match from the game description.
- *
- * @export
- */
 export class Runner {
 
     private player: Player;
@@ -26,20 +19,12 @@ export class Runner {
     private queue: GameQueue;
     private stream?: Promise<void>;
 
-    /**
-     * Creates an instance of Runner.
-     */
     constructor({ docker_options, game_server_options, queue_limit = RUNNER_QUEUE_LIMIT }: IRunnerOptions) {
         this.player = new Player(game_server_options, docker_options);
         this.pulling = false;
         this.queue = new GameQueue(queue_limit);
     }
 
-    /**
-     * Creates queue of games from the incoming stream of games. For
-     * each game in the queue, a match is played. Once the match has
-     * been initiated, the game id and status is logged.
-     */
     public start() {
         if (this.stream == null) {
             this.stream = this.pull();
