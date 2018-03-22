@@ -1,13 +1,12 @@
 import * as Docker from "dockerode";
 import * as fs from "fs";
-import { findIndex } from "lodash";
 import { basename } from "path";
 import { PassThrough } from "stream";
 import * as winston from "winston";
 import * as zlib from "zlib";
 
 import * as db from "../db";
-import { get_game_info, IGameServerClient, IGameServerOptions } from "../GameServer";
+import { get_game_info, IGameServerOptions } from "../GameServer";
 import { delay } from "../helpers";
 import { OUTPUT_DIR } from "../vars";
 import { IGame, IGameSubmission } from "./game";
