@@ -18,22 +18,24 @@ export class Player {
     public async play(game: IGame) {
         const clients: Client[] = [];
         try {
+            // create a fix client player index (ie player number, 0 -> player 1; 1 -> player 2)
+            // just be consistent with the ordering, matchmaking will take care of the rest
             clients.push(...game.submissions
                 .sort((sub_a, sub_b) => sub_a.id - sub_b.id)
-                .map((sub, index) => new Client(index, sub, this.game_server, game.id, this.options))
+                .map((sub, index) => new Client(index, sub, this.game_server, game.id, this.options)),
             );
             if (clients.length === 0) { throw new Error("No clients to play with"); }
-            // pull client images
             await this.pull_clients(clients);
             game.status = "playing";
-            // run client containers
             await this.run_clients(clients);
             game.end_time = Date.now();
             await db.updateSubmissions(game);
-            const { winner, loser, gamelogFilename: output_url } = await this.game_server.get_game_info(game.id);
-            game.winner = game.submissions.find((submission) => submission.team.name === winner.name);
-            game.win_reason = winner.reason;
-            game.lose_reason = loser.reason;
+            const { winner, losers: [some_loser], game_log_filename: output_url } = await this.game_server.get_game_info(game.id);
+            if (winner) {
+                game.winner = game.submissions.find((submission) => submission.team.name === winner.name);
+                game.win_reason = winner.reason;
+            }
+            game.lose_reason = some_loser.reason;
             game.log_url = output_url;
             await db.updateEndedGame(game);
             game.status = "finished";
