@@ -1,3 +1,4 @@
+import { findIndex } from "lodash";
 import * as request from "request-promise-native";
 import * as winston from "winston";
 
@@ -15,6 +16,12 @@ export interface IGameServerClient {
 export interface IGameServerError {
     error: string;
     gameName?: string;
+}
+
+export interface IGameServerGameInfo {
+    losers: IGameServerClient[];
+    output_url: string;
+    winner?: IGameServerClient;
 }
 
 export interface IGameServerOptions {
@@ -39,13 +46,25 @@ export interface IGameServerStatus {
  *
  * @export
  */
-export async function get_game_info({ hostname, api_port, game_name }: IGameServerOptions, sessionId: number): Promise<IGameServerStatus> {
-    return request.get(`http://${hostname}:${api_port}/status/${game_name}/${sessionId}`)
-        .then((body): IGameServerStatus => {
-            const { gamelogFilename, ...rest }: IGameServerStatus = JSON.parse(body);
-            return {
-                gamelogFilename: `/game_server/${gamelogFilename}.json.gz`,
-                ...rest,
-            };
-        }).catch((error) => { winston.error("Game server api failure"); throw error; });
+export async function get_game_info(
+    { hostname, api_port, game_name }: IGameServerOptions,
+    sessionId: number,
+): Promise<IGameServerGameInfo> {
+    try {
+        const { clients, gamelogFilename }: IGameServerStatus = await request({
+            json: true,
+            url: `http://${hostname}:${api_port}/status/${game_name}/${sessionId}`,
+        });
+        if (clients.length === 0) { throw new Error("Clients did not connect properly"); }
+        const winner_index = findIndex(clients, ({ won }) => won);
+        const [winner, ...losers] = [clients[winner_index], ...clients.filter((__, index) => index !== winner_index)];
+        return {
+            losers,
+            output_url: `/game_server/${gamelogFilename}.json.gz`,
+            winner,
+        };
+    } catch (error) {
+        winston.error("unable to query game server for game status");
+        throw error;
+    }
 }

@@ -37,13 +37,13 @@ export function make_play_game(
 
         await db.updateSubmissions(game);
 
-        const { clients, gamelogFilename } = await get_game_info(game_server_options, game.id);
-        const winner_index = findIndex(clients, ({ won }: IGameServerClient) => won);
-        const [winner, loser] = (winner_index === 0 ? clients : clients.reverse());
-        game.winner = game.submissions.find(({ team: { name } }) => name === winner.name);
-        game.win_reason = winner.reason;
-        game.lose_reason = loser.reason;
-        game.log_url = gamelogFilename;
+        const { losers: [some_loser], output_url, winner } = await get_game_info(game_server_options, game.id);
+        if (winner) {
+            game.winner = game.submissions.find(({ team: { name } }) => name === winner.name);
+            game.win_reason = winner.reason;
+        }
+        game.lose_reason = some_loser.reason;
+        game.log_url = output_url;
 
         await db.updateEndedGame(game);
 
