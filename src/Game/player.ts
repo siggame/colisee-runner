@@ -110,7 +110,12 @@ function run_game_clients(
                                     StopTimeout: 1,
                                     name: `team_${team_id}_${sub_id}`,
                                 },
-                            ).then(_ => true),
+                            ).then((container) => {
+                                if (container.output.StatusCode === 127) {
+                                    throw new Error("failed at entrypoint");
+                                }
+                                return true;
+                            }),
                         ]);
                         if (!on_time) {
                             winston.error("client timeout reached");
@@ -125,11 +130,26 @@ function run_game_clients(
                             }
                         }
                     } catch (error) {
+                        log.write("\n\n<<<<<<ERROR>>>>>>");
+                        log.write(`\n\n${JSON.stringify(error)}`);
                         throw error;
                     } finally {
                         log.end();
                     }
                 }
             }),
-    ).catch((e) => { winston.error("Run Failed"); throw e; });
+    ).catch(async (e) => {
+        winston.error("Run Failed");
+        await Promise.all(submissions.map(async (submission) => {
+            const [container] = await docker.listContainers({
+                filters: { name: [`/team_${submission.team.id}_${submission.id}`] }, limit: 1,
+            });
+            try {
+                await docker.getContainer(container.Id).stop();
+            } catch (error) {
+                winston.error("failed to stop container");
+            }
+        }));
+        throw e;
+    });
 }
