@@ -68,7 +68,12 @@ export class Client {
                 log,
                 this.container.createOptions,
                 this.container.startOptions,
-            ).then(_ => true);
+            ).then((container) => {
+                if (container.output.StatusCode === 127) {
+                    throw new Error("failed at entrypoint");
+                }
+                return true;
+            });
             // timeout for well-behaved but slow clients
             const on_time = await timeout(client_timeout * 60 * 1000, attempt_run);
             if (!on_time) {
