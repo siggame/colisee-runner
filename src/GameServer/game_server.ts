@@ -1,4 +1,3 @@
-import { lookup } from "dns";
 import { findIndex } from "lodash";
 import * as request from "request-promise-native";
 import * as winston from "winston";
@@ -17,6 +16,12 @@ export interface IGameServerClient {
 export interface IGameServerError {
     error: string;
     gameName?: string;
+}
+
+export interface IGameServerGameInfo {
+    game_log_filename: string;
+    losers: IGameServerClient[];
+    winner?: IGameServerClient;
 }
 
 export interface IGameServerOptions {
@@ -62,27 +67,16 @@ export class GameServer {
      * }>
      * @memberof GameServer
      */
-    public async get_game_info(session_id: number) {
+    public async get_game_info(session_id: number): Promise<IGameServerGameInfo> {
         const { clients, gamelogFilename }: IGameServerStatus = await request.get({ json: true, url: `${this.api_url}/${session_id}` })
             .catch((error) => { winston.error("Game server api failure"); throw error; });
         if (clients.length === 0) { throw new Error("Clients did not connect properly"); }
         const winner_index = findIndex(clients, ({ won }: IGameServerClient) => won);
-        const [winner, loser] = (winner_index === 0 ? clients : clients.reverse());
+        const [winner, ...losers] = [clients[winner_index], ...clients.filter((__, index) => index !== winner_index)];
         return {
-            gamelogFilename: `/game_server/${gamelogFilename}.json.gz`,
-            loser,
+            game_log_filename: `/game_server/${gamelogFilename}.json.gz`,
+            losers,
             winner,
         };
-    }
-
-    public get_ip_addr() {
-        return new Promise((res, rej) => {
-            lookup(this.options.hostname, (error, addr, family) => {
-                if (error) {
-                    rej(error);
-                }
-                res(addr);
-            });
-        }).catch((error) => { winston.error("failed to lookup ip for game_server"); throw error; });
     }
 }

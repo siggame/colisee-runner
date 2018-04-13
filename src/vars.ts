@@ -18,6 +18,7 @@ export const CLIENT_CPU_PERIOD: number = defaultTo<number>(toNumber(process.env.
 export const CLIENT_CPU_QUOTA: number = defaultTo<number>(toNumber(process.env.CLIENT_CPU_QUOTA), 25000);
 export const CLIENT_MEMORY_LIMIT: number = defaultTo<number>(toNumber(process.env.CLIENT_MEMORY_LIMIT), 1000000000);
 export const CLIENT_NETWORK: string = defaultTo<string>(process.env.CLIENT_NETWORK, "none");
+export const CLIENT_TIMEOUT: number = defaultTo<number>(toNumber(process.env.CLIENT_TIMEOUT), 15);
 export const CLIENT_USER: string = defaultTo<string>(process.env.CLIENT_USER, "nobody");
 
 export const OUTPUT_DIR: string = defaultTo<string>(process.env.OUTPUT_DIR, `/app/output/${hostname()}`);

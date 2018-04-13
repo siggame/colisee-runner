@@ -56,6 +56,13 @@ export async function delay(ms: number) {
     await new Promise((res, rej) => setTimeout(res, ms));
 }
 
+export async function timeout<Value>(ms: number, ...events: Promise<Value>[]): Promise<void | Value> {
+    return await Promise.race([
+        delay(ms),
+        ...events,
+    ] as Promise<void | Value>[]);
+}
+
 /**
  * Helper for type problems on callbacks.
  *
@@ -130,7 +137,7 @@ export async function* map<T, U>(
  */
 export async function* async_foreach<T>(
     iter: AsyncIterableIterator<T>,
-    async_callback: (value: T) => Promise<T>,
+    async_callback: (value: T) => Promise<void>,
     error: (error: any, value: T) => Promise<any>,
 ): AsyncIterableIterator<T> {
     for await (const value of iter) {

@@ -1,2 +1,2 @@
 export * from "./game";
-export * from "./stream";
+export * from "./queue";
