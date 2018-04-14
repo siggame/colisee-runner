@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { basename } from "path";
 import { PassThrough, Readable } from "stream";
 import * as winston from "winston";
-import * as zlib from "zlib";
+import { createGzip } from "zlib";
 
 import { IContainer, IListContainerFilter } from "../Docker";
 import { IGameSubmission } from "../Game";
@@ -23,6 +23,8 @@ export class Client {
         docker_options: Docker.DockerOptions,
     ) {
         if (output_url == null) { throw new Error("output_url was null"); }
+        const outputStream = new PassThrough();
+        outputStream.pipe(createGzip()).pipe(fs.createWriteStream(`${OUTPUT_DIR}/${basename(output_url)}`));
         this.container = {
             cmd: ["-i", `${index}`, "-n", `${name}`, "-s", game_server.game_url, "-r", `${game_id}`, game_server.options.game_name],
             createOptions: {
@@ -35,7 +37,7 @@ export class Client {
                 name: `team_${team_id}_${sub_id}`,
             },
             image,
-            outputStream: zlib.createGzip().pipe(fs.createWriteStream(`${OUTPUT_DIR}/${basename(output_url)}`)),
+            outputStream,
         };
         this.docker = new Docker(docker_options);
     }
