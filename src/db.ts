@@ -73,7 +73,7 @@ export async function getQueuedGame(): Promise<IGame | undefined> {
  */
 export function updateEndedGame({ id, log_url, lose_reason, winner, win_reason }: IGame) {
     if (winner === undefined) { throw TypeError("Winner is undefined."); }
-    const { team: { id: winner_id } } = winner;
+    const { id: winner_id } = winner;
     return db.connection.transaction(async (trx) => {
         await db.connection("games")
             .transacting(trx)
